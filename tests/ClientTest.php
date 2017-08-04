@@ -2,15 +2,15 @@
 
 namespace BackblazeB2\Tests;
 
-use BackblazeB2\Client;
 use BackblazeB2\Bucket;
+use BackblazeB2\Client;
+use BackblazeB2\Exceptions\BadJsonException;
 use BackblazeB2\Exceptions\BadValueException;
+use BackblazeB2\Exceptions\BucketAlreadyExistsException;
 use BackblazeB2\Exceptions\BucketNotEmptyException;
 use BackblazeB2\Exceptions\NotFoundException;
-use BackblazeB2\File;
-use BackblazeB2\Exceptions\BucketAlreadyExistsException;
-use BackblazeB2\Exceptions\BadJsonException;
 use BackblazeB2\Exceptions\ValidationException;
+use BackblazeB2\File;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Stream;
 
@@ -233,7 +233,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(strlen($content), $uploadRequest->getHeader('Content-Length')[0]);
         $this->assertEquals('test.txt', $uploadRequest->getHeader('X-Bz-File-Name')[0]);
         $this->assertEquals(sha1($content), $uploadRequest->getHeader('X-Bz-Content-Sha1')[0]);
-        $this->assertEquals(round(microtime(true) * 1000), $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0], '', 100);
+        $this->assertEquals(round(microtime(true) * 1000),
+            $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0], '', 100);
         $this->assertInstanceOf(Stream::class, $uploadRequest->getBody());
     }
 
@@ -266,7 +267,8 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(strlen($content), $uploadRequest->getHeader('Content-Length')[0]);
         $this->assertEquals('test.txt', $uploadRequest->getHeader('X-Bz-File-Name')[0]);
         $this->assertEquals(sha1($content), $uploadRequest->getHeader('X-Bz-Content-Sha1')[0]);
-        $this->assertEquals(round(microtime(true) * 1000), $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0], '', 100);
+        $this->assertEquals(round(microtime(true) * 1000),
+            $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0], '', 100);
         $this->assertInstanceOf(Stream::class, $uploadRequest->getBody());
     }
 
@@ -283,7 +285,7 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $client = new Client('testId', 'testKey', ['client' => $guzzle]);
 
         // My birthday :)
-        $lastModified =  701568000000;
+        $lastModified = 701568000000;
         $contentType = 'text/plain';
 
         $file = $client->upload([
@@ -330,13 +332,13 @@ class ClientTest extends \PHPUnit_Framework_TestCase
 
         $client->download([
             'FileId' => 'fileId',
-            'SaveAs' => __DIR__.'/test.txt'
+            'SaveAs' => __DIR__ . '/test.txt'
         ]);
 
-        $this->assertFileExists(__DIR__.'/test.txt');
-        $this->assertEquals('The quick brown fox jumps over the lazy dog', file_get_contents(__DIR__.'/test.txt'));
+        $this->assertFileExists(__DIR__ . '/test.txt');
+        $this->assertEquals('The quick brown fox jumps over the lazy dog', file_get_contents(__DIR__ . '/test.txt'));
 
-        unlink(__DIR__.'/test.txt');
+        unlink(__DIR__ . '/test.txt');
     }
 
     public function testDownloadingByIncorrectIdThrowsException()
@@ -384,13 +386,13 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $client->download([
             'BucketName' => 'test-bucket',
             'FileName' => 'test.txt',
-            'SaveAs' => __DIR__.'/test.txt'
+            'SaveAs' => __DIR__ . '/test.txt'
         ]);
 
-        $this->assertFileExists(__DIR__.'/test.txt');
-        $this->assertEquals('The quick brown fox jumps over the lazy dog', file_get_contents(__DIR__.'/test.txt'));
+        $this->assertFileExists(__DIR__ . '/test.txt');
+        $this->assertEquals('The quick brown fox jumps over the lazy dog', file_get_contents(__DIR__ . '/test.txt'));
 
-        unlink(__DIR__.'/test.txt');
+        unlink(__DIR__ . '/test.txt');
     }
 
     public function testDownloadingByIncorrectPathThrowsException()
