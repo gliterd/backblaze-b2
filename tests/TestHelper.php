@@ -1,8 +1,8 @@
 <?php
 
-namespace ChrisWhite\B2\Tests;
+namespace BackblazeB2\Tests;
 
-use ChrisWhite\B2\Http\Client as HttpClient;
+use BackblazeB2\Http\Client as HttpClient;
 
 trait TestHelper
 {

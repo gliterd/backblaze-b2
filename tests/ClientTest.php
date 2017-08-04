@@ -1,16 +1,16 @@
 <?php
 
-namespace ChrisWhite\B2\Tests;
+namespace BackblazeB2\Tests;
 
-use ChrisWhite\B2\Client;
-use ChrisWhite\B2\Bucket;
-use ChrisWhite\B2\Exceptions\BadValueException;
-use ChrisWhite\B2\Exceptions\BucketNotEmptyException;
-use ChrisWhite\B2\Exceptions\NotFoundException;
-use ChrisWhite\B2\File;
-use ChrisWhite\B2\Exceptions\BucketAlreadyExistsException;
-use ChrisWhite\B2\Exceptions\BadJsonException;
-use ChrisWhite\B2\Exceptions\ValidationException;
+use BackblazeB2\Client;
+use BackblazeB2\Bucket;
+use BackblazeB2\Exceptions\BadValueException;
+use BackblazeB2\Exceptions\BucketNotEmptyException;
+use BackblazeB2\Exceptions\NotFoundException;
+use BackblazeB2\File;
+use BackblazeB2\Exceptions\BucketAlreadyExistsException;
+use BackblazeB2\Exceptions\BadJsonException;
+use BackblazeB2\Exceptions\ValidationException;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Stream;
 
