@@ -6,9 +6,9 @@ use BackblazeB2\Exceptions\B2Exception;
 use BackblazeB2\Exceptions\BadJsonException;
 use BackblazeB2\Exceptions\BadValueException;
 use BackblazeB2\Exceptions\BucketAlreadyExistsException;
-use BackblazeB2\Exceptions\NotFoundException;
-use BackblazeB2\Exceptions\FileNotPresentException;
 use BackblazeB2\Exceptions\BucketNotEmptyException;
+use BackblazeB2\Exceptions\FileNotPresentException;
+use BackblazeB2\Exceptions\NotFoundException;
 use GuzzleHttp\Psr7\Response;
 
 class ErrorHandler
@@ -33,6 +33,6 @@ class ErrorHandler
             $exceptionClass = B2Exception::class;
         }
 
-        throw new $exceptionClass('Received error from B2: '.$responseJson['message']);
+        throw new $exceptionClass('Received error from B2: ' . $responseJson['message']);
     }
 }

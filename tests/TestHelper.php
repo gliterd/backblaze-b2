@@ -1,8 +1,8 @@
 <?php
 
-namespace ChrisWhite\B2\Tests;
+namespace BackblazeB2\Tests;
 
-use ChrisWhite\B2\Http\Client as HttpClient;
+use BackblazeB2\Http\Client as HttpClient;
 
 trait TestHelper
 {
@@ -20,7 +20,7 @@ trait TestHelper
 
     protected function buildResponseFromStub($statusCode, array $headers = [], $responseFile)
     {
-        $response = file_get_contents(dirname(__FILE__).'/responses/'.$responseFile);
+        $response = file_get_contents(dirname(__FILE__) . '/responses/' . $responseFile);
 
         return new \GuzzleHttp\Psr7\Response($statusCode, $headers, $response);
     }
