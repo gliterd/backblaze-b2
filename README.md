@@ -1,7 +1,13 @@
 ## Backblaze B2 for PHP
 
-`backblaze-b2` is a client library for working with Backblaze's B2 storage service. It aims to make using the service as
-easy as possible by exposing a clear API and taking influence from other SDKs that you may be familiar with.
+`backblaze-b2` is a client library for working with Backblaze's B2 storage service.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
+[![Software License][ico-license]](LICENSE.md)
+[![Build Status](https://img.shields.io/travis/gliterd/backblaze-b2/master.svg?style=flat-square)](https://travis-ci.org/gliterd/backblaze-b2)
+[![Coverage Status][ico-scrutinizer]][link-scrutinizer]
+[![Quality Score][ico-code-quality]][link-code-quality]
+[![Total Downloads](https://img.shields.io/packagist/dt/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
+
 
 ## Example
 
@@ -92,4 +98,20 @@ Feel free to contribute in any way you can whether that be reporting issues, mak
 
 ## License
 
-MIT.
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+[ico-version]: https://img.shields.io/packagist/v/gliterd/backblaze-b2.svg?style=flat-square
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-travis]: https://img.shields.io/travis/gliterd/backblaze-b2/master.svg?style=flat-square
+[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/gliterd/backblaze-b2.svg?style=flat-square
+[ico-code-quality]: https://img.shields.io/scrutinizer/g/gliterd/backblaze-b2.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/gliterd/backblaze-b2.svg?style=flat-square
+
+[link-packagist]: https://packagist.org/packages/gliterd/backblaze-b2
+[link-travis]: https://travis-ci.org/gliterd/backblaze-b2
+[link-scrutinizer]: https://scrutinizer-ci.com/g/gliterd/backblaze-b2/code-structure
+[link-code-quality]: https://scrutinizer-ci.com/g/gliterd/backblaze-b2
+[link-downloads]: https://packagist.org/packages/gliterd/backblaze-b2
+[link-author]: https://github.com/gliterd
+[link-contributors]: ../../contributors
+
