@@ -1,39 +1,59 @@
 ## Backblaze B2 for PHP
 
-`backblaze-b2` is a client library for working with Backblaze's B2 storage service. It aims to make using the service as
-easy as possible by exposing a clear API and taking influence from other SDKs that you may be familiar with.
+`backblaze-b2` is a client library for working with Backblaze's B2 storage service.
+[![Latest Version on Packagist](https://img.shields.io/packagist/v/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
+[![Software License][ico-license]](LICENSE.md)
+[![Build Status](https://img.shields.io/travis/gliterd/backblaze-b2/master.svg?style=flat-square)](https://travis-ci.org/gliterd/backblaze-b2)
+[![Coverage Status][ico-scrutinizer]][link-scrutinizer]
+[![Quality Score][ico-code-quality]][link-code-quality]
+[![Total Downloads](https://img.shields.io/packagist/dt/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
 
-## Example
 
-This is just a short example, full examples to come on the wiki.
+## Install
 
-```php
+Via Composer
+
+``` bash
+$ composer require gliterd/backblaze-b2
+```
+
+## Usage
+
+``` php
 use BackblazeB2\Client;
 use BackblazeB2\Bucket;
 
 $client = new Client('accountId', 'applicationKey');
-
-// Returns a Bucket object.
+```
+#### Returns a bucket details
+``` php
 $bucket = $client->createBucket([
     'BucketName' => 'my-special-bucket',
     'BucketType' => Bucket::TYPE_PRIVATE // or TYPE_PUBLIC
 ]);
+```
 
-// Change the bucket to private. Also returns a Bucket object.
+#### Change the bucket Type
+``` php
 $updatedBucket = $client->updateBucket([
     'BucketId' => $bucket->getId(),
     'BucketType' => Bucket::TYPE_PUBLIC
 ]);
+```
 
-// Retrieve an array of Bucket objects on your account.
+#### List all buckets
+``` php
 $buckets = $client->listBuckets();
-
-// Delete a bucket.
+```
+#### Delete a bucket
+``` php
 $client->deleteBucket([
-    'BucketId' => '4c2b957661da9c825f465e1b'
+    'BucketId' => 'YOUR_BUCKET_ID'
 ]);
+```
 
-// Upload a file to a bucket. Returns a File object.
+#### File Upload
+``` php
 $file = $client->upload([
     'BucketName' => 'my-special-bucket',
     'FileName' => 'path/to/upload/to',
@@ -42,8 +62,10 @@ $file = $client->upload([
     // The file content can also be provided via a resource.
     // 'Body' => fopen('/path/to/input', 'r')
 ]);
+```
 
-// Download a file from a bucket. Returns the file content.
+#### File Download
+``` php
 $fileContent = $client->download([
     'FileId' => $file->getId()
 
@@ -54,42 +76,65 @@ $fileContent = $client->download([
     // Can also save directly to a location on disk. This will cause download() to not return file content.
     // 'SaveAs' => '/path/to/save/location'
 ]);
+```
 
-// Delete a file from a bucket. Returns true or false.
+#### File Delete
+``` php
 $fileDelete = $client->deleteFile([
     'FileId' => $file->getId()
-    
+
     // Can also identify the file via bucket and path:
     // 'BucketName' => 'my-special-bucket',
     // 'FileName' => 'path/to/file'
 ]);
+```
 
-// Retrieve an array of file objects from a bucket.
+#### List all files
+``` php
 $fileList = $client->listFiles([
-    'BucketId' => '4d2dbbe08e1e983c5e6f0d12'
+    'BucketId' => 'YOUR_BUCKET_ID'
 ]);
 ```
 
-## Installation
 
-Installation is via Composer:
+## Change log
 
-```bash
-$ composer require gliterd/backblaze-b2
-```
+Please see [CHANGELOG](CHANGELOG.md) for more information what has changed recently.
 
-## Tests
-
-Tests are run with PHPUnit. After installing PHPUnit via Composer:
+## Testing
 
 ```bash
 $ vendor/bin/phpunit
 ```
 
-## Contributors
 
-Feel free to contribute in any way you can whether that be reporting issues, making suggestions or sending PRs. :)
+## Contributing
+
+Please see [CONTRIBUTING](CONTRIBUTING.md) and [CONDUCT](CONDUCT.md) for details.
+
+## Security
+
+If you discover any security related issues, please email mhetreramesh@gmail.com instead of using the issue tracker.
+
+## Credits
+
+- [All Contributors][link-contributors]
 
 ## License
 
-MIT.
+The MIT License (MIT). Please see [License File](LICENSE.md) for more information.
+
+[ico-version]: https://img.shields.io/packagist/v/gliterd/backblaze-b2.svg?style=flat-square
+[ico-license]: https://img.shields.io/badge/license-MIT-brightgreen.svg?style=flat-square
+[ico-travis]: https://img.shields.io/travis/gliterd/backblaze-b2/master.svg?style=flat-square
+[ico-scrutinizer]: https://img.shields.io/scrutinizer/coverage/g/gliterd/backblaze-b2.svg?style=flat-square
+[ico-code-quality]: https://img.shields.io/scrutinizer/g/gliterd/backblaze-b2.svg?style=flat-square
+[ico-downloads]: https://img.shields.io/packagist/dt/gliterd/backblaze-b2.svg?style=flat-square
+
+[link-packagist]: https://packagist.org/packages/gliterd/backblaze-b2
+[link-travis]: https://travis-ci.org/gliterd/backblaze-b2
+[link-scrutinizer]: https://scrutinizer-ci.com/g/gliterd/backblaze-b2/code-structure
+[link-code-quality]: https://scrutinizer-ci.com/g/gliterd/backblaze-b2
+[link-downloads]: https://packagist.org/packages/gliterd/backblaze-b2
+[link-author]: https://github.com/gliterd
+[link-contributors]: ../../contributors
