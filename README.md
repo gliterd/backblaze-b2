@@ -3,11 +3,17 @@
 `backblaze-b2` is a client library for working with Backblaze's B2 storage service. It aims to make using the service as
 easy as possible by exposing a clear API and taking influence from other SDKs that you may be familiar with.
 
-## Example
+## Install
 
-This is just a short example, full examples to come on the wiki.
+Via Composer
 
-```php
+``` bash
+$ composer require gliterd/backblaze-b2
+```
+
+## Usage
+
+``` php
 use BackblazeB2\Client;
 use BackblazeB2\Bucket;
 
