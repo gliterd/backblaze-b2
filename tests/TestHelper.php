@@ -3,13 +3,17 @@
 namespace BackblazeB2\Tests;
 
 use BackblazeB2\Http\Client as HttpClient;
+use GuzzleHttp\Handler\MockHandler;
+use GuzzleHttp\HandlerStack;
+use GuzzleHttp\Psr7\Response;
+
 
 trait TestHelper
 {
     protected function buildGuzzleFromResponses(array $responses, $history = null)
     {
-        $mock = new \GuzzleHttp\Handler\MockHandler($responses);
-        $handler = new \GuzzleHttp\HandlerStack($mock);
+        $mock = new MockHandler($responses);
+        $handler = new HandlerStack($mock);
 
         if ($history) {
             $handler->push($history);
@@ -22,6 +26,6 @@ trait TestHelper
     {
         $response = file_get_contents(dirname(__FILE__) . '/responses/' . $responseFile);
 
-        return new \GuzzleHttp\Psr7\Response($statusCode, $headers, $response);
+        return new Response($statusCode, $headers, $response);
     }
 }
