@@ -8,7 +8,7 @@
 [![Quality Score][ico-code-quality]][link-code-quality]
 [![Total Downloads](https://img.shields.io/packagist/dt/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
 
-`backblaze-b2` is a client library for working with Backblaze's B2 storage service.
+`backblaze-b2` is the SDK for working with Backblaze's B2 storage service.
 
 ## Install
 
