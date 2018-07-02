@@ -1,5 +1,6 @@
 ## Backblaze B2 for PHP
 
+[![Author](http://img.shields.io/badge/author-@mhetreramesh-blue.svg?style=flat-square)](https://twitter.com/mhetreramesh)
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
 [![Software License][ico-license]](LICENSE.md)
 [![Build Status](https://img.shields.io/travis/gliterd/backblaze-b2/master.svg?style=flat-square)](https://travis-ci.org/gliterd/backblaze-b2)
@@ -7,7 +8,7 @@
 [![Quality Score][ico-code-quality]][link-code-quality]
 [![Total Downloads](https://img.shields.io/packagist/dt/gliterd/backblaze-b2.svg?style=flat-square)](https://packagist.org/packages/gliterd/backblaze-b2)
 
-`backblaze-b2` is a client library for working with Backblaze's B2 storage service.
+`backblaze-b2` is the SDK for working with Backblaze's B2 storage service.
 
 ## Install
 
