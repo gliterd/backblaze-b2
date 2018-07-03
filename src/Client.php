@@ -42,8 +42,10 @@ class Client
      * Create a bucket with the given name and type.
      *
      * @param array $options
-     * @return Bucket
+     *
      * @throws ValidationException
+     *
+     * @return Bucket
      */
     public function createBucket(array $options)
     {
@@ -53,15 +55,15 @@ class Client
             );
         }
 
-        $response = $this->client->request('POST', $this->apiUrl . '/b2_create_bucket', [
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_create_bucket', [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
             'json' => [
-                'accountId' => $this->accountId,
+                'accountId'  => $this->accountId,
                 'bucketName' => $options['BucketName'],
-                'bucketType' => $options['BucketType']
-            ]
+                'bucketType' => $options['BucketType'],
+            ],
         ]);
 
         return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
@@ -71,8 +73,10 @@ class Client
      * Updates the type attribute of a bucket by the given ID.
      *
      * @param array $options
-     * @return Bucket
+     *
      * @throws ValidationException
+     *
+     * @return Bucket
      */
     public function updateBucket(array $options)
     {
@@ -86,15 +90,15 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
-        $response = $this->client->request('POST', $this->apiUrl . '/b2_update_bucket', [
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_update_bucket', [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
             'json' => [
-                'accountId' => $this->accountId,
-                'bucketId' => $options['BucketId'],
-                'bucketType' => $options['BucketType']
-            ]
+                'accountId'  => $this->accountId,
+                'bucketId'   => $options['BucketId'],
+                'bucketType' => $options['BucketType'],
+            ],
         ]);
 
         return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
@@ -109,13 +113,13 @@ class Client
     {
         $buckets = [];
 
-        $response = $this->client->request('POST', $this->apiUrl . '/b2_list_buckets', [
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_list_buckets', [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
             'json' => [
-                'accountId' => $this->accountId
-            ]
+                'accountId' => $this->accountId,
+            ],
         ]);
 
         foreach ($response['buckets'] as $bucket) {
@@ -129,6 +133,7 @@ class Client
      * Deletes the bucket identified by its ID.
      *
      * @param array $options
+     *
      * @return bool
      */
     public function deleteBucket(array $options)
@@ -137,14 +142,14 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
-        $this->client->request('POST', $this->apiUrl . '/b2_delete_bucket', [
+        $this->client->request('POST', $this->apiUrl.'/b2_delete_bucket', [
             'headers' => [
-                'Authorization' => $this->authToken
+                'Authorization' => $this->authToken,
             ],
             'json' => [
                 'accountId' => $this->accountId,
-                'bucketId' => $options['BucketId']
-            ]
+                'bucketId'  => $options['BucketId'],
+            ],
         ]);
 
         return true;
@@ -154,6 +159,7 @@ class Client
      * Uploads a file to a bucket and returns a File object.
      *
      * @param array $options
+     *
      * @return File
      */
     public function upload(array $options)
@@ -168,13 +174,13 @@ class Client
         }
 
         // Retrieve the URL that we should be uploading to.
-        $response = $this->client->request('POST', $this->apiUrl . '/b2_get_upload_url', [
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_get_upload_url', [
             'headers' => [
-                'Authorization' => $this->authToken
+                'Authorization' => $this->authToken,
             ],
             'json' => [
-                'bucketId' => $options['BucketId']
-            ]
+                'bucketId' => $options['BucketId'],
+            ],
         ]);
 
         $uploadEndpoint = $response['uploadUrl'];
@@ -207,14 +213,14 @@ class Client
 
         $response = $this->client->request('POST', $uploadEndpoint, [
             'headers' => [
-                'Authorization' => $uploadAuthToken,
-                'Content-Type' => $options['FileContentType'],
-                'Content-Length' => $size,
-                'X-Bz-File-Name' => $options['FileName'],
-                'X-Bz-Content-Sha1' => $hash,
-                'X-Bz-Info-src_last_modified_millis' => $options['FileLastModified']
+                'Authorization'                      => $uploadAuthToken,
+                'Content-Type'                       => $options['FileContentType'],
+                'Content-Length'                     => $size,
+                'X-Bz-File-Name'                     => $options['FileName'],
+                'X-Bz-Content-Sha1'                  => $hash,
+                'X-Bz-Info-src_last_modified_millis' => $options['FileLastModified'],
             ],
-            'body' => $options['Body']
+            'body' => $options['Body'],
         ]);
 
         return new File(
@@ -231,6 +237,7 @@ class Client
      * Download a file from a B2 bucket.
      *
      * @param array $options
+     *
      * @return bool|mixed|string
      */
     public function download(array $options)
@@ -238,14 +245,14 @@ class Client
         $requestUrl = null;
         $requestOptions = [
             'headers' => [
-                'Authorization' => $this->authToken
+                'Authorization' => $this->authToken,
             ],
-            'sink' => isset($options['SaveAs']) ? $options['SaveAs'] : null
+            'sink' => isset($options['SaveAs']) ? $options['SaveAs'] : null,
         ];
 
         if (isset($options['FileId'])) {
             $requestOptions['query'] = ['fileId' => $options['FileId']];
-            $requestUrl = $this->downloadUrl . '/b2api/v1/b2_download_file_by_id';
+            $requestUrl = $this->downloadUrl.'/b2api/v1/b2_download_file_by_id';
         } else {
             if (!isset($options['BucketName']) && isset($options['BucketId'])) {
                 $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
@@ -263,6 +270,7 @@ class Client
      * Retrieve a collection of File objects representing the files stored inside a bucket.
      *
      * @param array $options
+     *
      * @return array
      */
     public function listFiles(array $options)
@@ -285,15 +293,15 @@ class Client
 
         // B2 returns, at most, 1000 files per "page". Loop through the pages and compile an array of File objects.
         while (true) {
-            $response = $this->client->request('POST', $this->apiUrl . '/b2_list_file_names', [
+            $response = $this->client->request('POST', $this->apiUrl.'/b2_list_file_names', [
                 'headers' => [
-                    'Authorization' => $this->authToken
+                    'Authorization' => $this->authToken,
                 ],
                 'json' => [
-                    'bucketId' => $options['BucketId'],
+                    'bucketId'      => $options['BucketId'],
                     'startFileName' => $nextFileName,
-                    'maxFileCount' => $maxFileCount,
-                ]
+                    'maxFileCount'  => $maxFileCount,
+                ],
             ]);
 
             foreach ($response['files'] as $file) {
@@ -318,7 +326,8 @@ class Client
      * Test whether a file exists in B2 for the given bucket.
      *
      * @param array $options
-     * @return boolean
+     *
+     * @return bool
      */
     public function fileExists(array $options)
     {
@@ -327,12 +336,13 @@ class Client
         return !empty($files);
     }
 
-
     /**
      * Returns a single File object representing a file stored on B2.
      *
      * @param array $options
+     *
      * @throws NotFoundException If no file id was provided and BucketName + FileName does not resolve to a file, a NotFoundException is thrown.
+     *
      * @return File
      */
     public function getFile(array $options)
@@ -345,13 +355,13 @@ class Client
             }
         }
 
-        $response = $this->client->request('POST', $this->apiUrl . '/b2_get_file_info', [
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_get_file_info', [
             'headers' => [
-                'Authorization' => $this->authToken
+                'Authorization' => $this->authToken,
             ],
             'json' => [
-                'fileId' => $options['FileId']
-            ]
+                'fileId' => $options['FileId'],
+            ],
         ]);
 
         return new File(
@@ -371,6 +381,7 @@ class Client
      * Deletes the file identified by ID from Backblaze B2.
      *
      * @param array $options
+     *
      * @return bool
      */
     public function deleteFile(array $options)
@@ -387,14 +398,14 @@ class Client
             $options['FileId'] = $file->getId();
         }
 
-        $this->client->request('POST', $this->apiUrl . '/b2_delete_file_version', [
+        $this->client->request('POST', $this->apiUrl.'/b2_delete_file_version', [
             'headers' => [
-                'Authorization' => $this->authToken
+                'Authorization' => $this->authToken,
             ],
             'json' => [
                 'fileName' => $options['FileName'],
-                'fileId' => $options['FileId']
-            ]
+                'fileId'   => $options['FileId'],
+            ],
         ]);
 
         return true;
@@ -408,11 +419,11 @@ class Client
     protected function authorizeAccount()
     {
         $response = $this->client->request('GET', 'https://api.backblazeb2.com/b2api/v1/b2_authorize_account', [
-            'auth' => [$this->accountId, $this->applicationKey]
+            'auth' => [$this->accountId, $this->applicationKey],
         ]);
 
         $this->authToken = $response['authorizationToken'];
-        $this->apiUrl = $response['apiUrl'] . '/b2api/v1';
+        $this->apiUrl = $response['apiUrl'].'/b2api/v1';
         $this->downloadUrl = $response['downloadUrl'];
     }
 
@@ -420,6 +431,7 @@ class Client
      * Maps the provided bucket name to the appropriate bucket ID.
      *
      * @param $name
+     *
      * @return null
      */
     protected function getBucketIdFromName($name)
@@ -431,14 +443,13 @@ class Client
                 return $bucket->getId();
             }
         }
-
-        return null;
     }
 
     /**
      * Maps the provided bucket ID to the appropriate bucket name.
      *
      * @param $id
+     *
      * @return null
      */
     protected function getBucketNameFromId($id)
@@ -450,15 +461,13 @@ class Client
                 return $bucket->getName();
             }
         }
-
-        return null;
     }
 
     protected function getFileIdFromBucketAndFileName($bucketName, $fileName)
     {
         $files = $this->listFiles([
             'BucketName' => $bucketName,
-            'FileName' => $fileName,
+            'FileName'   => $fileName,
         ]);
 
         foreach ($files as $file) {
@@ -466,7 +475,5 @@ class Client
                 return $file->getId();
             }
         }
-
-        return null;
     }
 }
