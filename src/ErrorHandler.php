@@ -14,12 +14,12 @@ use GuzzleHttp\Psr7\Response;
 class ErrorHandler
 {
     protected static $mappings = [
-        'bad_json' => BadJsonException::class,
-        'bad_value' => BadValueException::class,
-        'duplicate_bucket_name' => BucketAlreadyExistsException::class,
-        'not_found' => NotFoundException::class,
-        'file_not_present' => FileNotPresentException::class,
-        'cannot_delete_non_empty_bucket' => BucketNotEmptyException::class
+        'bad_json'                       => BadJsonException::class,
+        'bad_value'                      => BadValueException::class,
+        'duplicate_bucket_name'          => BucketAlreadyExistsException::class,
+        'not_found'                      => NotFoundException::class,
+        'file_not_present'               => FileNotPresentException::class,
+        'cannot_delete_non_empty_bucket' => BucketNotEmptyException::class,
     ];
 
     public static function handleErrorResponse(Response $response)
@@ -33,6 +33,6 @@ class ErrorHandler
             $exceptionClass = B2Exception::class;
         }
 
-        throw new $exceptionClass('Received error from B2: ' . $responseJson['message']);
+        throw new $exceptionClass('Received error from B2: '.$responseJson['message']);
     }
 }
