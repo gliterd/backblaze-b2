@@ -7,8 +7,6 @@ use GuzzleHttp\Client as GuzzleClient;
 
 /**
  * Client wrapper around Guzzle.
- *
- * @package BackblazeB2\Http
  */
 class Client extends GuzzleClient
 {
@@ -16,9 +14,10 @@ class Client extends GuzzleClient
      * Sends a response to the B2 API, automatically handling decoding JSON and errors.
      *
      * @param string $method
-     * @param null $uri
-     * @param array $options
-     * @param bool $asJson
+     * @param null   $uri
+     * @param array  $options
+     * @param bool   $asJson
+     *
      * @return mixed|string
      */
     public function request($method, $uri = null, array $options = [], $asJson = true)
