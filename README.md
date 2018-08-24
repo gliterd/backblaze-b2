@@ -26,6 +26,8 @@ use BackblazeB2\Bucket;
 
 $client = new Client('accountId', 'applicationKey');
 ```
+## *ApplicationKey is not supported yet, please use MasterKey only*
+
 #### Returns a bucket details
 ``` php
 $bucket = $client->createBucket([

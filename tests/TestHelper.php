@@ -7,7 +7,6 @@ use GuzzleHttp\Handler\MockHandler;
 use GuzzleHttp\HandlerStack;
 use GuzzleHttp\Psr7\Response;
 
-
 trait TestHelper
 {
     protected function buildGuzzleFromResponses(array $responses, $history = null)
@@ -22,9 +21,9 @@ trait TestHelper
         return new HttpClient(['handler' => $handler]);
     }
 
-    protected function buildResponseFromStub($statusCode, array $headers = [], $responseFile)
+    protected function buildResponseFromStub($statusCode, array $headers, $responseFile)
     {
-        $response = file_get_contents(dirname(__FILE__) . '/responses/' . $responseFile);
+        $response = file_get_contents(dirname(__FILE__).'/responses/'.$responseFile);
 
         return new Response($statusCode, $headers, $response);
     }
