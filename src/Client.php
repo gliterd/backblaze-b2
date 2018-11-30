@@ -570,7 +570,6 @@ class Client
 
         $local_file_size = filesize($filePath);
         $total_bytes_sent = 0;
-        //$bytes_sent_for_part = 0;
         $bytes_sent_for_part = $minimum_part_size;
         $sha1_of_parts = Array();
         $part_no = 1;
@@ -604,7 +603,6 @@ class Client
             // Prepare for the next iteration of the loop
             $part_no++;
             $total_bytes_sent = $bytes_sent_for_part + $total_bytes_sent;
-            //$read_file_bytes_read = 0;
         }
 
         fclose($file_handle);
