@@ -476,13 +476,14 @@ class Client
             }
         }
     }
-    
+
     /**
      * Uploads a large file using b2 large file proceedure.
      *
      * @param $fileName
      * @param $filePath
      * @param $contentType
+     *
      * @return \BackblazeB2\File
      */
     public function uploadLargeFile($fileName, $filePath, $contentType)
@@ -529,7 +530,7 @@ class Client
                 'fileName'      => $fileName,
                 'contentType'   => $contentType,
                 'bucketId'      => $this->getBucketIdFromName(config('filesystems.disks.backblaze.bucketName')),
-            ]
+            ],
         ]);
 
         return $response;
@@ -615,7 +616,7 @@ class Client
 
     /**
      * finishes the large file upload proceedure.
-     * 
+     *
      * @param $fileId
      * @param array $sha1s
      *
