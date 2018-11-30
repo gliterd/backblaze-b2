@@ -478,7 +478,7 @@ class Client
     }
     
     /**
-     * Uploads a large file using b2 large file proceedure
+     * Uploads a large file using b2 large file proceedure.
      *
      * @param $fileName
      * @param $filePath
@@ -488,34 +488,35 @@ class Client
     public function uploadLargeFile($fileName, $filePath, $contentType)
     {
         // 1) b2_start_large_file, (returns fileId)
-        $start = $this->startLargeFile($fileName,$contentType);
+        $start = $this->startLargeFile($fileName, $contentType);
 
         // 2) b2_get_upload_part_url for each thread uploading (takes fileId)
         $url = $this->getUploadPartUrl($start['fileId']);
 
         //if last char of path is not a "/" then add a "/"
-        if(substr($filePath, -1) != '/') {
+        if (substr($filePath, -1) != '/') {
             $filePath = $filePath.'/';
         }
 
         // 3) b2_upload_part for each part of the file
-        $parts = $this->uploadParts($filePath.$fileName,$url['uploadUrl'],$url['authorizationToken']);
+        $parts = $this->uploadParts($filePath.$fileName, $url['uploadUrl'], $url['authorizationToken']);
 
         $sha1s = [];
 
-        foreach($parts as $part) {
+        foreach ($parts as $part) {
             $sha1s[] = $part['contentSha1'];
         }
 
         // 4) b2_finish_large_file.
-        return $this->finishLargeFile($start['fileId'],$sha1s);
+        return $this->finishLargeFile($start['fileId'], $sha1s);
     }
 
     /**
-     * starts the large file upload process
+     * starts the large file upload process.
      *
      * @param $fileName
      * @param $contentType
+     *
      * @return array
      */
     protected function startLargeFile($fileName, $contentType)
@@ -525,9 +526,9 @@ class Client
                 'Authorization' => $this->authToken,
             ],
             'json' => [
-                'fileName' => $fileName,
-                'contentType' => $contentType,
-                'bucketId' => $this->getBucketIdFromName(config('filesystems.disks.backblaze.bucketName')),
+                'fileName'      => $fileName,
+                'contentType'   => $contentType,
+                'bucketId'      => $this->getBucketIdFromName(config('filesystems.disks.backblaze.bucketName')),
             ]
         ]);
 
@@ -535,9 +536,10 @@ class Client
     }
 
     /**
-     * gets the url for the next large file part upload
+     * gets the url for the next large file part upload.
      *
      * @param $fileId
+     *
      * @return array
      */
     protected function getUploadPartUrl($fileId)
@@ -555,11 +557,12 @@ class Client
     }
 
     /**
-     * uploads the file as "parts" of 100MB each
+     * uploads the file as "parts" of 100MB each.
      *
      * @param $filePath
      * @param $uploadUrl
      * @param $largeFileAuthToken
+     *
      * @return array
      */
     protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken)
@@ -571,11 +574,11 @@ class Client
         $local_file_size = filesize($filePath);
         $total_bytes_sent = 0;
         $bytes_sent_for_part = $minimum_part_size;
-        $sha1_of_parts = Array();
+        $sha1_of_parts = [];
         $part_no = 1;
-        $file_handle = fopen($filePath, "r");
+        $file_handle = fopen($filePath, 'r');
 
-        while($total_bytes_sent < $local_file_size) {
+        while ($total_bytes_sent < $local_file_size) {
 
             // Determine the number of bytes to send based on the minimum part size
             if (($local_file_size - $total_bytes_sent) < $minimum_part_size) {
@@ -611,20 +614,21 @@ class Client
     }
 
     /**
-     * finishes the large file upload proceedure
+     * finishes the large file upload proceedure.
      * 
      * @param $fileId
      * @param array $sha1s
+     *
      * @return File
      */
-    protected function finishLargeFile($fileId, Array $sha1s)
+    protected function finishLargeFile($fileId, array $sha1s)
     {
         $response = $this->client->request('POST', $this->apiUrl.'/b2_finish_large_file', [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
             'json' => [
-                'fileId' => $fileId,
+                'fileId'        => $fileId,
                 'partSha1Array' => $sha1s,
             ],
         ]);
