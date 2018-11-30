@@ -486,7 +486,6 @@ class Client
      */
     public function uploadLargeFile(array $options)
     {
-
         if (substr($options['FileName'], 0, 1) === '/') {
             $options['FileName'] = ltrim($options['FileName'], '/');
         }
