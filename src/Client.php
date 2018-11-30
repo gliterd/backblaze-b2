@@ -480,31 +480,42 @@ class Client
     /**
      * Uploads a large file using b2 large file proceedure.
      *
-     * @param $fileName
-     * @param $filePath
-     * @param $contentType
+     * @param array $options
      *
      * @return \BackblazeB2\File
      */
-    public function uploadLargeFile($fileName, $filePath, $contentType)
+    public function uploadLargeFile(array $options)
     {
+
+        if (substr($options['FileName'], 0, 1) === '/') {
+            $options['FileName'] = ltrim($options['FileName'], '/');
+        }
+
+        //if last char of path is not a "/" then add a "/"
+        if (substr($options['FilePath'], -1) != '/') {
+            $options['FilePath'] = $options['FilePath'].'/';
+        }
+
+        if (!isset($options['BucketId']) && isset($options['BucketName'])) {
+            $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
+        }
+
+        if (!isset($options['FileContentType'])) {
+            $options['FileContentType'] = 'b2/x-auto';
+        }
+
         // 1) b2_start_large_file, (returns fileId)
-        $start = $this->startLargeFile($fileName, $contentType);
+        $start = $this->startLargeFile($options['FileName'], $options['FileContentType'], $options['BucketId']);
 
         // 2) b2_get_upload_part_url for each thread uploading (takes fileId)
         $url = $this->getUploadPartUrl($start['fileId']);
 
-        //if last char of path is not a "/" then add a "/"
-        if (substr($filePath, -1) != '/') {
-            $filePath = $filePath.'/';
-        }
-
         // 3) b2_upload_part for each part of the file
-        $parts = $this->uploadParts($filePath.$fileName, $url['uploadUrl'], $url['authorizationToken']);
+        $parts = $this->uploadParts($options['FilePath'].$options['FileName'], $url['uploadUrl'], $url['authorizationToken']);
 
         $sha1s = [];
 
-        foreach ($parts as $part) {
+        foreach($parts as $part) {
             $sha1s[] = $part['contentSha1'];
         }
 
@@ -517,10 +528,11 @@ class Client
      *
      * @param $fileName
      * @param $contentType
+     * @param $bucketId
      *
      * @return array
      */
-    protected function startLargeFile($fileName, $contentType)
+    protected function startLargeFile($fileName, $contentType, $bucketId)
     {
         $response = $this->client->request('POST', $this->apiUrl.'/b2_start_large_file', [
             'headers' => [
@@ -529,7 +541,7 @@ class Client
             'json' => [
                 'fileName'      => $fileName,
                 'contentType'   => $contentType,
-                'bucketId'      => $this->getBucketIdFromName(config('filesystems.disks.backblaze.bucketName')),
+                'bucketId'      => $bucketId,
             ],
         ]);
 
