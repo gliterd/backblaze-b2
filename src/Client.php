@@ -515,7 +515,7 @@ class Client
 
         $sha1s = [];
 
-        foreach($parts as $part) {
+        foreach ($parts as $part) {
             $sha1s[] = $part['contentSha1'];
         }
 
