@@ -476,4 +476,185 @@ class Client
             }
         }
     }
+
+    /**
+     * Uploads a large file using b2 large file proceedure.
+     *
+     * @param array $options
+     *
+     * @return \BackblazeB2\File
+     */
+    public function uploadLargeFile(array $options)
+    {
+        if (substr($options['FileName'], 0, 1) === '/') {
+            $options['FileName'] = ltrim($options['FileName'], '/');
+        }
+
+        //if last char of path is not a "/" then add a "/"
+        if (substr($options['FilePath'], -1) != '/') {
+            $options['FilePath'] = $options['FilePath'].'/';
+        }
+
+        if (!isset($options['BucketId']) && isset($options['BucketName'])) {
+            $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
+        }
+
+        if (!isset($options['FileContentType'])) {
+            $options['FileContentType'] = 'b2/x-auto';
+        }
+
+        // 1) b2_start_large_file, (returns fileId)
+        $start = $this->startLargeFile($options['FileName'], $options['FileContentType'], $options['BucketId']);
+
+        // 2) b2_get_upload_part_url for each thread uploading (takes fileId)
+        $url = $this->getUploadPartUrl($start['fileId']);
+
+        // 3) b2_upload_part for each part of the file
+        $parts = $this->uploadParts($options['FilePath'].$options['FileName'], $url['uploadUrl'], $url['authorizationToken']);
+
+        $sha1s = [];
+
+        foreach ($parts as $part) {
+            $sha1s[] = $part['contentSha1'];
+        }
+
+        // 4) b2_finish_large_file.
+        return $this->finishLargeFile($start['fileId'], $sha1s);
+    }
+
+    /**
+     * starts the large file upload process.
+     *
+     * @param $fileName
+     * @param $contentType
+     * @param $bucketId
+     *
+     * @return array
+     */
+    protected function startLargeFile($fileName, $contentType, $bucketId)
+    {
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_start_large_file', [
+            'headers' => [
+                'Authorization' => $this->authToken,
+            ],
+            'json' => [
+                'fileName'      => $fileName,
+                'contentType'   => $contentType,
+                'bucketId'      => $bucketId,
+            ],
+        ]);
+
+        return $response;
+    }
+
+    /**
+     * gets the url for the next large file part upload.
+     *
+     * @param $fileId
+     *
+     * @return array
+     */
+    protected function getUploadPartUrl($fileId)
+    {
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_get_upload_part_url', [
+            'headers' => [
+                'Authorization' => $this->authToken,
+            ],
+            'json' => [
+                'fileId' => $fileId,
+            ],
+        ]);
+
+        return $response;
+    }
+
+    /**
+     * uploads the file as "parts" of 100MB each.
+     *
+     * @param $filePath
+     * @param $uploadUrl
+     * @param $largeFileAuthToken
+     *
+     * @return array
+     */
+    protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken)
+    {
+        $return = [];
+
+        $minimum_part_size = 100 * (1000 * 1000);
+
+        $local_file_size = filesize($filePath);
+        $total_bytes_sent = 0;
+        $bytes_sent_for_part = $minimum_part_size;
+        $sha1_of_parts = [];
+        $part_no = 1;
+        $file_handle = fopen($filePath, 'r');
+
+        while ($total_bytes_sent < $local_file_size) {
+
+            // Determine the number of bytes to send based on the minimum part size
+            if (($local_file_size - $total_bytes_sent) < $minimum_part_size) {
+                $bytes_sent_for_part = ($local_file_size - $total_bytes_sent);
+            }
+
+            // Get a sha1 of the part we are going to send
+            fseek($file_handle, $total_bytes_sent);
+            $data_part = fread($file_handle, $bytes_sent_for_part);
+            array_push($sha1_of_parts, sha1($data_part));
+            fseek($file_handle, $total_bytes_sent);
+
+            $response = $this->client->request('POST', $uploadUrl, [
+                'headers' => [
+                    'Authorization'                      => $largeFileAuthToken,
+                    'Content-Length'                     => $bytes_sent_for_part,
+                    'X-Bz-Part-Number'                   => $part_no,
+                    'X-Bz-Content-Sha1'                  => $sha1_of_parts[$part_no - 1],
+                ],
+                'body' => $data_part,
+            ]);
+
+            $return[] = $response;
+
+            // Prepare for the next iteration of the loop
+            $part_no++;
+            $total_bytes_sent = $bytes_sent_for_part + $total_bytes_sent;
+        }
+
+        fclose($file_handle);
+
+        return $return;
+    }
+
+    /**
+     * finishes the large file upload proceedure.
+     *
+     * @param $fileId
+     * @param array $sha1s
+     *
+     * @return File
+     */
+    protected function finishLargeFile($fileId, array $sha1s)
+    {
+        $response = $this->client->request('POST', $this->apiUrl.'/b2_finish_large_file', [
+            'headers' => [
+                'Authorization' => $this->authToken,
+            ],
+            'json' => [
+                'fileId'        => $fileId,
+                'partSha1Array' => $sha1s,
+            ],
+        ]);
+
+        return new File(
+            $response['fileId'],
+            $response['fileName'],
+            $response['contentSha1'],
+            $response['contentLength'],
+            $response['contentType'],
+            $response['fileInfo'],
+            $response['bucketId'],
+            $response['action'],
+            $response['uploadTimestamp']
+        );
+    }
 }
