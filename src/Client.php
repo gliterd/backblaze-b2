@@ -200,7 +200,7 @@ class Client
         } else {
             // We've been given a simple string body, it's super simple to calculate the hash and size.
             $hash = sha1($options['Body']);
-            $size = mb_strlen($options['Body']);
+            $size = strlen($options['Body']);
         }
 
         if (!isset($options['FileLastModified'])) {
