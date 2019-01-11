@@ -13,7 +13,6 @@ use BackblazeB2\Exceptions\ValidationException;
 use BackblazeB2\File;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Stream;
-use Carbon\Carbon;
 use ReflectionClass;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
