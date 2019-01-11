@@ -13,6 +13,8 @@ use BackblazeB2\Exceptions\ValidationException;
 use BackblazeB2\File;
 use GuzzleHttp\Middleware;
 use GuzzleHttp\Psr7\Stream;
+use Carbon\Carbon;
+use ReflectionClass;
 
 class ClientTest extends \PHPUnit_Framework_TestCase
 {
@@ -525,5 +527,36 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             'FileId'   => 'fileId',
             'FileName' => 'fileName',
         ]));
+    }
+
+    public function testAuthenticationTimeout()
+    {
+        $reflectionClass = new ReflectionClass('BackblazeB2\Client');
+        $reflectionProperty = $reflectionClass->getProperty('reauthTime');
+        $reflectionProperty->setAccessible(true);
+
+        $guzzle = $this->buildGuzzleFromResponses([
+            $this->buildResponseFromStub(200, [], 'authorize_account.json'),
+            $this->buildResponseFromStub(200, [], 'authorize_account.json'),
+            $this->buildResponseFromStub(200, [], 'create_bucket_public.json'),
+        ]);
+
+        $client = new Client('testId', 'testKey',
+            [
+                'client'               => $guzzle,
+                'auth_timeout_seconds' => 3,
+            ]);
+
+        $curTime = $reflectionProperty->getValue($client);
+        sleep(10);  // let the token timeout
+
+        // Something that will reaturhorize
+        $bucket = $client->createBucket([
+            'BucketName' => 'Test bucket',
+            'BucketType' => Bucket::TYPE_PUBLIC,
+        ]);
+
+        $newTime = $reflectionProperty->getValue($client);
+        $this->assertTrue($curTime->timestamp != $newTime->timestamp);
     }
 }

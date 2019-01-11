@@ -5,6 +5,7 @@ namespace BackblazeB2;
 use BackblazeB2\Exceptions\NotFoundException;
 use BackblazeB2\Exceptions\ValidationException;
 use BackblazeB2\Http\Client as HttpClient;
+use Carbon\Carbon;
 
 class Client
 {
@@ -17,6 +18,9 @@ class Client
 
     protected $client;
 
+    protected $reauthTime;
+    protected $authTimeoutSeconds;
+
     /**
      * Client constructor. Accepts the account ID, application key and an optional array of options.
      *
@@ -28,6 +32,15 @@ class Client
     {
         $this->accountId = $accountId;
         $this->applicationKey = $applicationKey;
+
+        if (isset($options['auth_timeout_seconds'])) {
+            $this->authTimeoutSeconds = $options['auth_timeout_seconds'];
+        } else {
+            $this->authTimeoutSeconds = 12 * 60 * 60;  // 12 hour default
+        }
+
+        // set reauthorize time to force an authentication to take place
+        $this->reauthTime = Carbon::now('UTC')->subSeconds($this->authTimeoutSeconds * 2);
 
         if (isset($options['client'])) {
             $this->client = $options['client'];
@@ -54,6 +67,8 @@ class Client
                 sprintf('Bucket type must be %s or %s', Bucket::TYPE_PRIVATE, Bucket::TYPE_PUBLIC)
             );
         }
+
+        $this->authorizeAccount();
 
         $response = $this->client->request('POST', $this->apiUrl.'/b2_create_bucket', [
             'headers' => [
@@ -90,6 +105,8 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
+        $this->authorizeAccount();
+
         $response = $this->client->request('POST', $this->apiUrl.'/b2_update_bucket', [
             'headers' => [
                 'Authorization' => $this->authToken,
@@ -112,6 +129,8 @@ class Client
     public function listBuckets()
     {
         $buckets = [];
+
+        $this->authorizeAccount();
 
         $response = $this->client->request('POST', $this->apiUrl.'/b2_list_buckets', [
             'headers' => [
@@ -141,6 +160,8 @@ class Client
         if (!isset($options['BucketId']) && isset($options['BucketName'])) {
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
+
+        $this->authorizeAccount();
 
         $this->client->request('POST', $this->apiUrl.'/b2_delete_bucket', [
             'headers' => [
@@ -172,6 +193,8 @@ class Client
         if (!isset($options['BucketId']) && isset($options['BucketName'])) {
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
+
+        $this->authorizeAccount();
 
         // Retrieve the URL that we should be uploading to.
         $response = $this->client->request('POST', $this->apiUrl.'/b2_get_upload_url', [
@@ -261,6 +284,8 @@ class Client
             $requestUrl = sprintf('%s/file/%s/%s', $this->downloadUrl, $options['BucketName'], $options['FileName']);
         }
 
+        $this->authorizeAccount();
+
         $response = $this->client->request('GET', $requestUrl, $requestOptions, false);
 
         return isset($options['SaveAs']) ? true : $response;
@@ -290,6 +315,8 @@ class Client
             $nextFileName = $fileName;
             $maxFileCount = 1;
         }
+
+        $this->authorizeAccount();
 
         // B2 returns, at most, 1000 files per "page". Loop through the pages and compile an array of File objects.
         while (true) {
@@ -355,6 +382,8 @@ class Client
             }
         }
 
+        $this->authorizeAccount();
+
         $response = $this->client->request('POST', $this->apiUrl.'/b2_get_file_info', [
             'headers' => [
                 'Authorization' => $this->authToken,
@@ -398,6 +427,8 @@ class Client
             $options['FileId'] = $file->getId();
         }
 
+        $this->authorizeAccount();
+
         $this->client->request('POST', $this->apiUrl.'/b2_delete_file_version', [
             'headers' => [
                 'Authorization' => $this->authToken,
@@ -418,13 +449,17 @@ class Client
      */
     protected function authorizeAccount()
     {
-        $response = $this->client->request('GET', 'https://api.backblazeb2.com/b2api/v1/b2_authorize_account', [
-            'auth' => [$this->accountId, $this->applicationKey],
-        ]);
+        if (Carbon::now('UTC')->timestamp > $this->reauthTime->timestamp) {
+            $response = $this->client->request('GET', 'https://api.backblazeb2.com/b2api/v1/b2_authorize_account', [
+                'auth' => [$this->accountId, $this->applicationKey],
+            ]);
 
-        $this->authToken = $response['authorizationToken'];
-        $this->apiUrl = $response['apiUrl'].'/b2api/v1';
-        $this->downloadUrl = $response['downloadUrl'];
+            $this->authToken = $response['authorizationToken'];
+            $this->apiUrl = $response['apiUrl'].'/b2api/v1';
+            $this->downloadUrl = $response['downloadUrl'];
+            $this->reauthTime = Carbon::now('UTC');
+            $this->reauthTime->addSeconds($this->authTimeoutSeconds);
+        }
     }
 
     /**
@@ -502,6 +537,8 @@ class Client
         if (!isset($options['FileContentType'])) {
             $options['FileContentType'] = 'b2/x-auto';
         }
+
+        $this->authorizeAccount();
 
         // 1) b2_start_large_file, (returns fileId)
         $start = $this->startLargeFile($options['FileName'], $options['FileContentType'], $options['BucketId']);
