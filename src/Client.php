@@ -281,8 +281,8 @@ class Client
         $nextFileName = null;
         $maxFileCount = 1000;
 
-        $prefix = isset($options["Prefix"]) ? $options["Prefix"] : "";
-        $delimiter = isset($options["Delimiter"]) ? $options["Delimiter"] : null;
+        $prefix = isset($options['Prefix']) ? $options['Prefix'] : '';
+        $delimiter = isset($options['Delimiter']) ? $options['Delimiter'] : null;
 
         $files = [];
 
@@ -295,7 +295,7 @@ class Client
             $maxFileCount = 1;
         }
 
-        // B2 returns, at most, 1000 files per "page". Loop through the pages and compile an array of File objects.
+        // B2 returns, at most, 1000 files per 'page'. Loop through the pages and compile an array of File objects.
         while (true) {
             $response = $this->client->request('POST', $this->apiUrl.'/b2_list_file_names', [
                 'headers' => [
@@ -306,7 +306,7 @@ class Client
                     'startFileName' => $nextFileName,
                     'maxFileCount'  => $maxFileCount,
                     'prefix'        => $prefix,
-                    'delimiter'     => $delimiter
+                    'delimiter'     => $delimiter,
                 ],
             ]);
 
