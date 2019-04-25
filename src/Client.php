@@ -682,10 +682,6 @@ class Client
     {
         $this->authorizeAccount();
 
-        if (empty($apiUrl)) {
-            $apiUrl = $this->apiUrl;
-        }
-
         $client = new \GuzzleHttp\Client([
             'base_uri' => $apiUrl,
             'headers' => [
