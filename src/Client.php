@@ -6,6 +6,7 @@ use BackblazeB2\Exceptions\NotFoundException;
 use BackblazeB2\Exceptions\ValidationException;
 use BackblazeB2\Http\Client as HttpClient;
 use Carbon\Carbon;
+use GuzzleHttp\Exception\GuzzleException;
 
 class Client
 {
@@ -18,7 +19,7 @@ class Client
 
     protected $client;
 
-    protected $reauthTime;
+    protected $reAuthTime;
     protected $authTimeoutSeconds;
 
     /**
@@ -27,6 +28,7 @@ class Client
      * @param $accountId
      * @param $applicationKey
      * @param array $options
+     * @throws \Exception
      */
     public function __construct($accountId, $applicationKey, array $options = [])
     {
@@ -40,15 +42,13 @@ class Client
         }
 
         // set reauthorize time to force an authentication to take place
-        $this->reauthTime = Carbon::now('UTC')->subSeconds($this->authTimeoutSeconds * 2);
+        $this->reAuthTime = Carbon::now('UTC')->subSeconds($this->authTimeoutSeconds * 2);
 
         if (isset($options['client'])) {
             $this->client = $options['client'];
         } else {
             $this->client = new HttpClient(['exceptions' => false]);
         }
-
-        $this->authorizeAccount();
     }
 
     /**
@@ -68,18 +68,11 @@ class Client
             );
         }
 
-        $this->authorizeAccount();
-
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_create_bucket', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'accountId'  => $this->accountId,
-                'bucketName' => $options['BucketName'],
-                'bucketType' => $options['BucketType'],
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'accountId'  => $this->accountId,
+            'bucketName' => $options['BucketName'],
+            'bucketType' => $options['BucketType'],
+        ])->request('POST', '/b2_create_bucket');
 
         return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
     }
@@ -105,18 +98,11 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
-        $this->authorizeAccount();
-
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_update_bucket', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'accountId'  => $this->accountId,
-                'bucketId'   => $options['BucketId'],
-                'bucketType' => $options['BucketType'],
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'accountId'  => $this->accountId,
+            'bucketId'   => $options['BucketId'],
+            'bucketType' => $options['BucketType'],
+        ])->request('POST', '/b2_update_bucket');
 
         return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
     }
@@ -125,21 +111,18 @@ class Client
      * Returns a list of bucket objects representing the buckets on the account.
      *
      * @return array
+     *
+     * @throws \Exception
+     *
+     * @throws GuzzleException
      */
     public function listBuckets()
     {
         $buckets = [];
 
-        $this->authorizeAccount();
-
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_list_buckets', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'accountId' => $this->accountId,
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'accountId' => $this->accountId,
+        ])->request('POST', '/b2_list_buckets');
 
         foreach ($response['buckets'] as $bucket) {
             $buckets[] = new Bucket($bucket['bucketId'], $bucket['bucketName'], $bucket['bucketType']);
@@ -154,6 +137,10 @@ class Client
      * @param array $options
      *
      * @return bool
+     *
+     * @throws \Exception
+     *
+     * @throws GuzzleException
      */
     public function deleteBucket(array $options)
     {
@@ -161,17 +148,14 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
-        $this->authorizeAccount();
-
-        $this->client->request('POST', $this->apiUrl.'/b2_delete_bucket', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
+        try {
+            $this->generateAuthenticatedClient([
                 'accountId' => $this->accountId,
-                'bucketId'  => $options['BucketId'],
-            ],
-        ]);
+                'bucketId' => $options['BucketId'],
+            ])->request('POST', $this->apiUrl . '/b2_delete_bucket');
+        } catch (\Exception $e) {
+            return false;
+        }
 
         return true;
     }
@@ -182,6 +166,10 @@ class Client
      * @param array $options
      *
      * @return File
+     *
+     * @throws \Exception
+     *
+     * @throws GuzzleException
      */
     public function upload(array $options)
     {
@@ -194,17 +182,10 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
-        $this->authorizeAccount();
-
         // Retrieve the URL that we should be uploading to.
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_get_upload_url', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'bucketId' => $options['BucketId'],
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'bucketId' => $options['BucketId'],
+        ])->request('POST', '/b2_get_upload_url');
 
         $uploadEndpoint = $response['uploadUrl'];
         $uploadAuthToken = $response['authorizationToken'];
@@ -262,6 +243,8 @@ class Client
      * @param array $options
      *
      * @return bool|mixed|string
+     *
+     * @throws \Exception
      */
     public function download(array $options)
     {
@@ -297,6 +280,10 @@ class Client
      * @param array $options
      *
      * @return array
+     *
+     * @throws \Exception
+     *
+     * @throws GuzzleException
      */
     public function listFiles(array $options)
     {
@@ -324,18 +311,13 @@ class Client
 
         // B2 returns, at most, 1000 files per "page". Loop through the pages and compile an array of File objects.
         while (true) {
-            $response = $this->client->request('POST', $this->apiUrl.'/b2_list_file_names', [
-                'headers' => [
-                    'Authorization' => $this->authToken,
-                ],
-                'json' => [
-                    'bucketId'      => $options['BucketId'],
-                    'startFileName' => $nextFileName,
-                    'maxFileCount'  => $maxFileCount,
-                    'prefix'        => $prefix,
-                    'delimiter'     => $delimiter,
-                ],
-            ]);
+            $response = $this->generateAuthenticatedClient([
+                'bucketId'      => $options['BucketId'],
+                'startFileName' => $nextFileName,
+                'maxFileCount'  => $maxFileCount,
+                'prefix'        => $prefix,
+                'delimiter'     => $delimiter,
+            ])->request('POST', '/b2_list_file_names');
 
             foreach ($response['files'] as $file) {
                 // if we have a file name set, only retrieve information if the file name matches
@@ -361,6 +343,9 @@ class Client
      * @param array $options
      *
      * @return bool
+     * @throws \Exception
+     *
+     * @throws GuzzleException
      */
     public function fileExists(array $options)
     {
@@ -388,16 +373,9 @@ class Client
             }
         }
 
-        $this->authorizeAccount();
-
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_get_file_info', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'fileId' => $options['FileId'],
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'fileId' => $options['FileId'],
+        ])->request('POST', '/b2_get_file_info');
 
         return new File(
             $response['fileId'],
@@ -418,6 +396,10 @@ class Client
      * @param array $options
      *
      * @return bool
+     *
+     * @throws NotFoundException
+     *
+     * @throws GuzzleException
      */
     public function deleteFile(array $options)
     {
@@ -433,17 +415,14 @@ class Client
             $options['FileId'] = $file->getId();
         }
 
-        $this->authorizeAccount();
-
-        $this->client->request('POST', $this->apiUrl.'/b2_delete_file_version', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
+        try {
+            $this->generateAuthenticatedClient([
                 'fileName' => $options['FileName'],
-                'fileId'   => $options['FileId'],
-            ],
-        ]);
+                'fileId' => $options['FileId'],
+            ])->request('POST', '/b2_delete_file_version');
+        } catch (\Exception $e) {
+            return false;
+        }
 
         return true;
     }
@@ -455,7 +434,7 @@ class Client
      */
     protected function authorizeAccount()
     {
-        if (Carbon::now('UTC')->timestamp > $this->reauthTime->timestamp) {
+        if (Carbon::now('UTC')->timestamp > $this->reAuthTime->timestamp) {
             $response = $this->client->request('GET', 'https://api.backblazeb2.com/b2api/v1/b2_authorize_account', [
                 'auth' => [$this->accountId, $this->applicationKey],
             ]);
@@ -463,8 +442,8 @@ class Client
             $this->authToken = $response['authorizationToken'];
             $this->apiUrl = $response['apiUrl'].'/b2api/v1';
             $this->downloadUrl = $response['downloadUrl'];
-            $this->reauthTime = Carbon::now('UTC');
-            $this->reauthTime->addSeconds($this->authTimeoutSeconds);
+            $this->reAuthTime = Carbon::now('UTC');
+            $this->reAuthTime->addSeconds($this->authTimeoutSeconds);
         }
     }
 
@@ -474,6 +453,8 @@ class Client
      * @param $name
      *
      * @return null
+     *
+     * @throws \Exception
      */
     protected function getBucketIdFromName($name)
     {
@@ -492,6 +473,8 @@ class Client
      * @param $id
      *
      * @return null
+     *
+     * @throws \Exception
      */
     protected function getBucketNameFromId($id)
     {
@@ -524,6 +507,9 @@ class Client
      * @param array $options
      *
      * @return \BackblazeB2\File
+     *
+     * @throws \Exception
+     * @throws GuzzleException
      */
     public function uploadLargeFile(array $options)
     {
@@ -573,19 +559,15 @@ class Client
      * @param $bucketId
      *
      * @return array
+     * @throws GuzzleException
      */
     protected function startLargeFile($fileName, $contentType, $bucketId)
     {
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_start_large_file', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'fileName'      => $fileName,
-                'contentType'   => $contentType,
-                'bucketId'      => $bucketId,
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'fileName'      => $fileName,
+            'contentType'   => $contentType,
+            'bucketId'      => $bucketId,
+        ])->request('POST', '/b2_start_large_file');
 
         return $response;
     }
@@ -596,17 +578,13 @@ class Client
      * @param $fileId
      *
      * @return array
+     * @throws GuzzleException
      */
     protected function getUploadPartUrl($fileId)
     {
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_get_upload_part_url', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'fileId' => $fileId,
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'fileId' => $fileId,
+        ])->request('POST', '/b2_get_upload_part_url');
 
         return $response;
     }
@@ -675,18 +653,14 @@ class Client
      * @param array $sha1s
      *
      * @return File
+     * @throws GuzzleException
      */
     protected function finishLargeFile($fileId, array $sha1s)
     {
-        $response = $this->client->request('POST', $this->apiUrl.'/b2_finish_large_file', [
-            'headers' => [
-                'Authorization' => $this->authToken,
-            ],
-            'json' => [
-                'fileId'        => $fileId,
-                'partSha1Array' => $sha1s,
-            ],
-        ]);
+        $response = $this->generateAuthenticatedClient([
+            'fileId'        => $fileId,
+            'partSha1Array' => $sha1s,
+        ])->request('POST', '/b2_finish_large_file');
 
         return new File(
             $response['fileId'],
@@ -699,5 +673,27 @@ class Client
             $response['action'],
             $response['uploadTimestamp']
         );
+    }
+
+    /*
+     * Generates Authenticated Guzzle Client
+     */
+    protected function generateAuthenticatedClient($json = [])
+    {
+        $this->authorizeAccount();
+
+        if (empty($apiUrl)) {
+            $apiUrl = $this->apiUrl;
+        }
+
+        $client = new \GuzzleHttp\Client([
+            'base_uri' => $apiUrl,
+            'headers' => [
+                'Authorization' => $this->authToken,
+            ],
+            'json' => $json
+        ]);
+
+        return $client;
     }
 }
