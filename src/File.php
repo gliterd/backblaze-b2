@@ -2,7 +2,7 @@
 
 namespace BackblazeB2;
 
-class File
+class File implements \JsonSerializable
 {
     protected $id;
     protected $name;
@@ -40,6 +40,21 @@ class File
         $this->uploadTimestamp = $uploadTimestamp;
     }
 
+
+	public function jsonSerialize() 
+	{
+        return [
+            'id' => $this->getId(),
+            'name' => $this->getName(),
+            'hash' => $this->getHash(),
+            'size' => $this->getSize(),
+            'type' => $this->getType(),
+            'info' => $this->getInfo(),
+            'bucketId' => $this->getBucketId(),
+            'action' => $this->getAction(),
+            'uploadTimestamp' => $this->getUploadTimestamp(),
+        ];
+	}
     /**
      * @return string
      */
