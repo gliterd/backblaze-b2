@@ -68,7 +68,7 @@ class Client
             );
         }
 
-        $response = $this->generateAuthenticatedClient([
+        $response = $this->sendB2Request([
             'accountId'  => $this->accountId,
             'bucketName' => $options['BucketName'],
             'bucketType' => $options['BucketType'],
@@ -98,7 +98,7 @@ class Client
             $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
         }
 
-        $response = $this->generateAuthenticatedClient([
+        $response = $this->sendB2Request([
             'accountId'  => $this->accountId,
             'bucketId'   => $options['BucketId'],
             'bucketType' => $options['BucketType'],
@@ -120,7 +120,7 @@ class Client
     {
         $buckets = [];
 
-        $response = $this->generateAuthenticatedClient([
+        $response = $this->sendB2Request([
             'accountId' => $this->accountId,
         ])->request('POST', '/b2_list_buckets');
 
@@ -149,7 +149,7 @@ class Client
         }
 
         try {
-            $this->generateAuthenticatedClient([
+            $this->sendB2Request([
                 'accountId' => $this->accountId,
                 'bucketId' => $options['BucketId'],
             ])->request('POST', $this->apiUrl . '/b2_delete_bucket');
@@ -183,7 +183,7 @@ class Client
         }
 
         // Retrieve the URL that we should be uploading to.
-        $response = $this->generateAuthenticatedClient([
+        $response = $this->sendB2Request([
             'bucketId' => $options['BucketId'],
         ])->request('POST', '/b2_get_upload_url');
 
@@ -311,7 +311,7 @@ class Client
 
         // B2 returns, at most, 1000 files per "page". Loop through the pages and compile an array of File objects.
         while (true) {
-            $response = $this->generateAuthenticatedClient([
+            $response = $this->sendB2Request([
                 'bucketId'      => $options['BucketId'],
                 'startFileName' => $nextFileName,
                 'maxFileCount'  => $maxFileCount,
@@ -373,9 +373,12 @@ class Client
             }
         }
 
-        $response = $this->generateAuthenticatedClient([
-            'fileId' => $options['FileId'],
-        ])->request('POST', '/b2_get_file_info');
+        $response = $this->sendB2Request(
+            '/b2_get_file_info',
+            [
+                'fileId' => $options['FileId'],
+            ]
+        );
 
         return new File(
             $response['fileId'],
@@ -416,10 +419,13 @@ class Client
         }
 
         try {
-            $this->generateAuthenticatedClient([
-                'fileName' => $options['FileName'],
-                'fileId' => $options['FileId'],
-            ])->request('POST', '/b2_delete_file_version');
+            $this->sendB2Request(
+                '/b2_delete_file_version',
+                [
+                    'fileName' => $options['FileName'],
+                    'fileId' => $options['FileId'],
+                ]
+            );
         } catch (\Exception $e) {
             return false;
         }
@@ -563,11 +569,14 @@ class Client
      */
     protected function startLargeFile($fileName, $contentType, $bucketId)
     {
-        $response = $this->generateAuthenticatedClient([
-            'fileName'      => $fileName,
-            'contentType'   => $contentType,
-            'bucketId'      => $bucketId,
-        ])->request('POST', '/b2_start_large_file');
+        $response = $this->sendB2Request(
+            '/b2_start_large_file',
+            [
+                'fileName'      => $fileName,
+                'contentType'   => $contentType,
+                'bucketId'      => $bucketId,
+            ]
+        );
 
         return $response;
     }
@@ -582,9 +591,12 @@ class Client
      */
     protected function getUploadPartUrl($fileId)
     {
-        $response = $this->generateAuthenticatedClient([
-            'fileId' => $fileId,
-        ])->request('POST', '/b2_get_upload_part_url');
+        $response = $this->sendB2Request(
+            '/b2_get_upload_part_url',
+            [
+                'fileId' => $fileId,
+            ]
+        );
 
         return $response;
     }
@@ -657,10 +669,13 @@ class Client
      */
     protected function finishLargeFile($fileId, array $sha1s)
     {
-        $response = $this->generateAuthenticatedClient([
-            'fileId'        => $fileId,
-            'partSha1Array' => $sha1s,
-        ])->request('POST', '/b2_finish_large_file');
+        $response = $this->sendB2Request(
+            '/b2_finish_large_file',
+            [
+                'fileId'        => $fileId,
+                'partSha1Array' => $sha1s,
+            ]
+        );
 
         return new File(
             $response['fileId'],
@@ -678,12 +693,12 @@ class Client
     /*
      * Generates Authenticated Guzzle Client
      */
-    protected function generateAuthenticatedClient($json = [])
+    protected function sendB2Request($uri, $json = [])
     {
         $this->authorizeAccount();
 
         $client = new \GuzzleHttp\Client([
-            'base_uri' => $apiUrl,
+            'base_uri' => $this->apiUrl.$uri,
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
