@@ -28,6 +28,7 @@ class Client
      * @param $accountId
      * @param $applicationKey
      * @param array $options
+     *
      * @throws \Exception
      */
     public function __construct($accountId, $applicationKey, array $options = [])
@@ -110,11 +111,10 @@ class Client
     /**
      * Returns a list of bucket objects representing the buckets on the account.
      *
-     * @return array
-     *
      * @throws \Exception
-     *
      * @throws GuzzleException
+     *
+     * @return array
      */
     public function listBuckets()
     {
@@ -136,11 +136,10 @@ class Client
      *
      * @param array $options
      *
-     * @return bool
-     *
      * @throws \Exception
-     *
      * @throws GuzzleException
+     *
+     * @return bool
      */
     public function deleteBucket(array $options)
     {
@@ -151,8 +150,8 @@ class Client
         try {
             $this->sendB2Request([
                 'accountId' => $this->accountId,
-                'bucketId' => $options['BucketId'],
-            ])->request('POST', $this->apiUrl . '/b2_delete_bucket');
+                'bucketId'  => $options['BucketId'],
+            ])->request('POST', $this->apiUrl.'/b2_delete_bucket');
         } catch (\Exception $e) {
             return false;
         }
@@ -165,11 +164,10 @@ class Client
      *
      * @param array $options
      *
-     * @return File
-     *
      * @throws \Exception
-     *
      * @throws GuzzleException
+     *
+     * @return File
      */
     public function upload(array $options)
     {
@@ -242,9 +240,9 @@ class Client
      *
      * @param array $options
      *
-     * @return bool|mixed|string
-     *
      * @throws \Exception
+     *
+     * @return bool|mixed|string
      */
     public function download(array $options)
     {
@@ -279,11 +277,10 @@ class Client
      *
      * @param array $options
      *
-     * @return array
-     *
      * @throws \Exception
-     *
      * @throws GuzzleException
+     *
+     * @return array
      */
     public function listFiles(array $options)
     {
@@ -342,10 +339,10 @@ class Client
      *
      * @param array $options
      *
-     * @return bool
      * @throws \Exception
-     *
      * @throws GuzzleException
+     *
+     * @return bool
      */
     public function fileExists(array $options)
     {
@@ -398,11 +395,10 @@ class Client
      *
      * @param array $options
      *
-     * @return bool
-     *
      * @throws NotFoundException
-     *
      * @throws GuzzleException
+     *
+     * @return bool
      */
     public function deleteFile(array $options)
     {
@@ -423,7 +419,7 @@ class Client
                 '/b2_delete_file_version',
                 [
                     'fileName' => $options['FileName'],
-                    'fileId' => $options['FileId'],
+                    'fileId'   => $options['FileId'],
                 ]
             );
         } catch (\Exception $e) {
@@ -458,9 +454,9 @@ class Client
      *
      * @param $name
      *
-     * @return null
-     *
      * @throws \Exception
+     *
+     * @return null
      */
     protected function getBucketIdFromName($name)
     {
@@ -478,9 +474,9 @@ class Client
      *
      * @param $id
      *
-     * @return null
-     *
      * @throws \Exception
+     *
+     * @return null
      */
     protected function getBucketNameFromId($id)
     {
@@ -512,10 +508,10 @@ class Client
      *
      * @param array $options
      *
-     * @return \BackblazeB2\File
-     *
      * @throws \Exception
      * @throws GuzzleException
+     *
+     * @return \BackblazeB2\File
      */
     public function uploadLargeFile(array $options)
     {
@@ -564,8 +560,9 @@ class Client
      * @param $contentType
      * @param $bucketId
      *
-     * @return array
      * @throws GuzzleException
+     *
+     * @return array
      */
     protected function startLargeFile($fileName, $contentType, $bucketId)
     {
@@ -586,8 +583,9 @@ class Client
      *
      * @param $fileId
      *
-     * @return array
      * @throws GuzzleException
+     *
+     * @return array
      */
     protected function getUploadPartUrl($fileId)
     {
@@ -664,8 +662,9 @@ class Client
      * @param $fileId
      * @param array $sha1s
      *
-     * @return File
      * @throws GuzzleException
+     *
+     * @return File
      */
     protected function finishLargeFile($fileId, array $sha1s)
     {
@@ -699,10 +698,10 @@ class Client
 
         $client = new \GuzzleHttp\Client([
             'base_uri' => $this->apiUrl.$uri,
-            'headers' => [
+            'headers'  => [
                 'Authorization' => $this->authToken,
             ],
-            'json' => $json
+            'json' => $json,
         ]);
 
         return $client;
