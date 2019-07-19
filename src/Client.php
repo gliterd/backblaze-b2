@@ -39,7 +39,7 @@ class Client
         if (isset($options['auth_timeout_seconds'])) {
             $this->authTimeoutSeconds = $options['auth_timeout_seconds'];
         } else {
-            $this->authTimeoutSeconds = 12 * 60 * 60;  // 12 hour default
+            $this->authTimeoutSeconds = 12 * 60 * 60; // 12 hour default
         }
 
         // set reauthorize time to force an authentication to take place
