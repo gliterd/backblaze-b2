@@ -9,6 +9,7 @@ use BackblazeB2\Exceptions\BucketAlreadyExistsException;
 use BackblazeB2\Exceptions\BucketNotEmptyException;
 use BackblazeB2\Exceptions\FileNotPresentException;
 use BackblazeB2\Exceptions\NotFoundException;
+use BackblazeB2\Exceptions\UnauthorizedAccessException;
 use GuzzleHttp\Psr7\Response;
 
 class ErrorHandler
