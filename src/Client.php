@@ -7,12 +7,11 @@ use BackblazeB2\Exceptions\ValidationException;
 use BackblazeB2\Http\Client as HttpClient;
 use Carbon\Carbon;
 use GuzzleHttp\Exception\GuzzleException;
-use Psr\Http\Message\ResponseInterface;
 
 class Client
 {
     private const B2_API_BASE_URL = 'https://api.backblazeb2.com';
-    private const B2_API_V1 = '/b2api/v1';
+    private const B2_API_V1 = '/b2api/v1/';
     protected $accountId;
     protected $applicationKey;
     protected $authToken;
@@ -55,8 +54,9 @@ class Client
      *
      * @param array $options
      *
-     * @return Bucket
      * @throws ValidationException
+     *
+     * @return Bucket
      */
     public function createBucket(array $options)
     {
@@ -80,9 +80,9 @@ class Client
      *
      * @param array $options
      *
-     * @return Bucket
-     * @throws GuzzleException
      * @throws ValidationException
+     *
+     * @return Bucket
      */
     public function updateBucket(array $options)
     {
@@ -131,7 +131,6 @@ class Client
      * @param array $options
      *
      * @return bool
-     * @throws GuzzleException
      */
     public function deleteBucket(array $options)
     {
@@ -153,7 +152,6 @@ class Client
      * @param array $options
      *
      * @return File
-     * @throws GuzzleException
      */
     public function upload(array $options)
     {
@@ -227,8 +225,7 @@ class Client
      *
      * @param array $options
      *
-     * @return bool|mixed|string
-     * @throws GuzzleException
+     * @return bool
      */
     public function download(array $options)
     {
@@ -264,7 +261,6 @@ class Client
      * @param array $options
      *
      * @return array
-     * @throws GuzzleException
      */
     public function listFiles(array $options)
     {
@@ -323,9 +319,6 @@ class Client
      *
      * @param array $options
      *
-     * @throws \Exception
-     * @throws GuzzleException
-     *
      * @return bool
      */
     public function fileExists(array $options)
@@ -340,9 +333,10 @@ class Client
      *
      * @param array $options
      *
-     * @return File
      * @throws GuzzleException
      * @throws NotFoundException If no file id was provided and BucketName + FileName does not resolve to a file, a NotFoundException is thrown.
+     *
+     * @return File
      */
     public function getFile(array $options)
     {
@@ -376,9 +370,10 @@ class Client
      *
      * @param array $options
      *
-     * @return bool
      * @throws GuzzleException
      * @throws NotFoundException
+     *
+     * @return bool
      */
     public function deleteFile(array $options)
     {
@@ -411,12 +406,12 @@ class Client
             return;
         }
 
-        $response = $this->client->request('GET', self::B2_API_BASE_URL . self::B2_API_V1 . '/b2_authorize_account', [
+        $response = $this->client->request('GET', self::B2_API_BASE_URL.self::B2_API_V1.'/b2_authorize_account', [
             'auth' => [$this->accountId, $this->applicationKey],
         ]);
 
         $this->authToken = $response['authorizationToken'];
-        $this->apiUrl = $response['apiUrl'] . self::B2_API_V1 . '/';
+        $this->apiUrl = $response['apiUrl'].self::B2_API_V1;
         $this->downloadUrl = $response['downloadUrl'];
         $this->reAuthTime = Carbon::now('UTC');
         $this->reAuthTime->addSeconds($this->authTimeoutSeconds);
@@ -463,7 +458,6 @@ class Client
      * @param $fileName
      *
      * @return mixed
-     * @throws GuzzleException
      */
     protected function getFileIdFromBucketAndFileName($bucketName, $fileName)
     {
@@ -485,7 +479,6 @@ class Client
      * @param array $options
      *
      * @return File
-     * @throws GuzzleException
      */
     public function uploadLargeFile(array $options)
     {
@@ -550,8 +543,7 @@ class Client
      *
      * @param $fileId
      *
-     * @return mixed|ResponseInterface|string
-     * @throws GuzzleException
+     * @return mixed
      */
     protected function getUploadPartUrl($fileId)
     {
@@ -568,7 +560,6 @@ class Client
      * @param $largeFileAuthToken
      *
      * @return array
-     * @throws GuzzleException
      */
     protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken)
     {
@@ -647,7 +638,7 @@ class Client
     }
 
     /**
-     * Sends a authorized request to b2 API
+     * Sends a authorized request to b2 API.
      *
      * @param string $method
      * @param string $route
@@ -659,7 +650,7 @@ class Client
     {
         $this->authorizeAccount();
 
-        return $this->client->request($method, $this->apiUrl . $route, [
+        return $this->client->request($method, $this->apiUrl.$route, [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],

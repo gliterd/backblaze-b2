@@ -20,8 +20,9 @@ class Client extends GuzzleClient
      * @param array  $options
      * @param bool   $asJson
      *
-     * @return mixed|ResponseInterface|string
      * @throws GuzzleException
+     *
+     * @return mixed|ResponseInterface|string
      */
     public function request($method, $uri = null, array $options = [], $asJson = true)
     {
