@@ -235,8 +235,12 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(strlen($content), $uploadRequest->getHeader('Content-Length')[0]);
         $this->assertEquals('test.txt', $uploadRequest->getHeader('X-Bz-File-Name')[0]);
         $this->assertEquals(sha1($content), $uploadRequest->getHeader('X-Bz-Content-Sha1')[0]);
-        $this->assertEquals(round(microtime(true) * 1000),
-            $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0], '', 100);
+        $this->assertEquals(
+            round(microtime(true) * 1000),
+            $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0],
+            '',
+            100
+        );
         $this->assertInstanceOf(Stream::class, $uploadRequest->getBody());
     }
 
@@ -269,8 +273,12 @@ class ClientTest extends \PHPUnit_Framework_TestCase
         $this->assertEquals(strlen($content), $uploadRequest->getHeader('Content-Length')[0]);
         $this->assertEquals('test.txt', $uploadRequest->getHeader('X-Bz-File-Name')[0]);
         $this->assertEquals(sha1($content), $uploadRequest->getHeader('X-Bz-Content-Sha1')[0]);
-        $this->assertEquals(round(microtime(true) * 1000),
-            $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0], '', 100);
+        $this->assertEquals(
+            round(microtime(true) * 1000),
+            $uploadRequest->getHeader('X-Bz-Info-src_last_modified_millis')[0],
+            '',
+            100
+        );
         $this->assertInstanceOf(Stream::class, $uploadRequest->getBody());
     }
 
@@ -540,11 +548,14 @@ class ClientTest extends \PHPUnit_Framework_TestCase
             $this->buildResponseFromStub(200, [], 'create_bucket_public.json'),
         ]);
 
-        $client = new Client('testId', 'testKey',
+        $client = new Client(
+            'testId',
+            'testKey',
             [
                 'client'               => $guzzle,
                 'auth_timeout_seconds' => 2,
-            ]);
+            ]
+        );
 
         $curTime = $reflectionProperty->getValue($client);
         sleep(5);  // let the token timeout
