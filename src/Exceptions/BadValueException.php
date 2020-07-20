@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class BadValueException extends \Exception
+class BadValueException extends B2Exception
 {
 }

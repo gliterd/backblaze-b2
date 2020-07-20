@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class ValidationException extends \Exception
+class ValidationException extends B2Exception
 {
 }

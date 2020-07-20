@@ -24,6 +24,11 @@ class ErrorHandler
         'unauthorized'                   => UnauthorizedAccessException::class,
     ];
 
+    /**
+     * @param Response $response
+     *
+     * @throws B2Exception
+     */
     public static function handleErrorResponse(Response $response)
     {
         $responseJson = json_decode($response->getBody(), true);
