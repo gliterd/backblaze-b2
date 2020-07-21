@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class BucketNotEmptyException extends \Exception
+class BucketNotEmptyException extends B2Exception
 {
 }

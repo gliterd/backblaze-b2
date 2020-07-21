@@ -3,6 +3,7 @@
 namespace BackblazeB2\Http;
 
 use BackblazeB2\ErrorHandler;
+use BackblazeB2\Exceptions\B2Exception;
 use GuzzleHttp\Client as GuzzleClient;
 use GuzzleHttp\Exception\GuzzleException;
 use Psr\Http\Message\ResponseInterface;
@@ -20,7 +21,8 @@ class Client extends GuzzleClient
      * @param array  $options
      * @param bool   $asJson
      *
-     * @throws GuzzleException
+     * @throws GuzzleException If the request fails.
+     * @throws B2Exception     If the B2 server replies with an error.
      *
      * @return mixed|ResponseInterface|string
      */

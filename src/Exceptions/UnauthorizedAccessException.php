@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class UnauthorizedAccessException extends \Exception
+class UnauthorizedAccessException extends B2Exception
 {
 }

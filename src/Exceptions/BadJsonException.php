@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class BadJsonException extends \Exception
+class BadJsonException extends B2Exception
 {
 }

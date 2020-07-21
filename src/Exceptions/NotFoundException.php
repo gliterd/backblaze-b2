@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class NotFoundException extends \Exception
+class NotFoundException extends B2Exception
 {
 }

@@ -2,6 +2,6 @@
 
 namespace BackblazeB2\Exceptions;
 
-class FileNotPresentException extends \Exception
+class FileNotPresentException extends B2Exception
 {
 }
