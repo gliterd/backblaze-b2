@@ -430,7 +430,8 @@ class Client
         $response = $this->client->request('GET', self::B2_API_BASE_URL.self::B2_API_V1.'/b2_authorize_account', [
             'auth' => [$this->accountId, $this->applicationKey],
         ]);
-
+        
+        $this->accountId = $response['accountId'];
         $this->authToken = $response['authorizationToken'];
         $this->apiUrl = $response['apiUrl'].self::B2_API_V1;
         $this->downloadUrl = $response['downloadUrl'];
@@ -682,6 +683,11 @@ class Client
     protected function sendAuthorizedRequest($method, $route, $json = [])
     {
         $this->authorizeAccount();
+
+        //overwriting the accountID with master account ID after authentification
+        if (isset($json['accountId'])) {
+            $json['accountId'] = $this->accountId;
+        }
 
         return $this->client->request($method, $this->apiUrl.$route, [
             'headers' => [
