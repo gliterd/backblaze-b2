@@ -212,7 +212,7 @@ class Client
             $options['FileContentType'] = 'b2/x-auto';
         }
 
-        $response = $this->client->request('POST', $uploadEndpoint, [
+        $response = $this->client->guzzleRequest('POST', $uploadEndpoint, [
             'headers' => [
                 'Authorization'                      => $uploadAuthToken,
                 'Content-Type'                       => $options['FileContentType'],
@@ -264,7 +264,7 @@ class Client
 
         $this->authorizeAccount();
 
-        $response = $this->client->request('GET', $requestUrl, $requestOptions, false);
+        $response = $this->client->guzzleRequest('GET', $requestUrl, $requestOptions, false);
 
         return isset($options['SaveAs']) ? true : $response;
     }
@@ -427,7 +427,7 @@ class Client
             return;
         }
 
-        $response = $this->client->request('GET', self::B2_API_BASE_URL.self::B2_API_V1.'/b2_authorize_account', [
+        $response = $this->client->guzzleRequest('GET', self::B2_API_BASE_URL.self::B2_API_V1.'/b2_authorize_account', [
             'auth' => [$this->accountId, $this->applicationKey],
         ]);
 
@@ -614,7 +614,7 @@ class Client
             array_push($sha1_of_parts, sha1($data_part));
             fseek($file_handle, $total_bytes_sent);
 
-            $response = $this->client->request('POST', $uploadUrl, [
+            $response = $this->client->guzzleRequest('POST', $uploadUrl, [
                 'headers' => [
                     'Authorization'                      => $largeFileAuthToken,
                     'Content-Length'                     => $bytes_sent_for_part,
@@ -683,7 +683,7 @@ class Client
     {
         $this->authorizeAccount();
 
-        return $this->client->request($method, $this->apiUrl.$route, [
+        return $this->client->guzzleRequest($method, $this->apiUrl.$route, [
             'headers' => [
                 'Authorization' => $this->authToken,
             ],
