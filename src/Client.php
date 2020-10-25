@@ -75,7 +75,7 @@ class Client
             'bucketType' => $options['BucketType'],
         ]);
 
-        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
+        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType'], $bucket['options'], $bucket['corsRules']);
     }
 
     /**
@@ -107,7 +107,7 @@ class Client
             'bucketType' => $options['BucketType'],
         ]);
 
-        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
+        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType'], $bucket['options'], $bucket['corsRules']);
     }
 
     /**
@@ -127,7 +127,7 @@ class Client
         ]);
 
         foreach ($response['buckets'] as $bucket) {
-            $buckets[] = new Bucket($bucket['bucketId'], $bucket['bucketName'], $bucket['bucketType']);
+            $buckets[] = new Bucket($bucket['bucketId'], $bucket['bucketName'], $bucket['bucketType'], $bucket['options'], $bucket['corsRules']);
         }
 
         return $buckets;
