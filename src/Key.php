@@ -76,5 +76,4 @@ class Key
     {
         return $this->expirationTimestamp;
     }
-
 }
