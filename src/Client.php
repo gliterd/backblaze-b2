@@ -668,6 +668,42 @@ class Client
     }
 
     /**
+     * Create a key pair for the given bucket and permissions.
+     *
+     * @param array $options
+     *
+     * @throws ValidationException
+     * @throws GuzzleException     If the request fails.
+     * @throws B2Exception         If the B2 server replies with an error.
+     *
+     * @return Bucket
+     */
+    public function createKey(array $options)
+    {
+        $request = [
+            'accountId'    => $this->accountId,
+            'capabilities' => $options['Capabilities'],
+            'keyName'      => $options['KeyName'],
+        ];
+
+        if (array_key_exists('BucketId', $options)) {
+            $request['bucketId'] = $options['BucketId'];
+        }
+
+        if (array_key_exists('NamePrefix', $options)) {
+            $request['namePrefix'] = $options['NamePrefix'];
+        }
+
+        if (array_key_exists('ValidDurationInSeconds', $options)) {
+            $request['validDurationInSeconds'] = $options['ValidDurationInSeconds'];
+        }
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_create_key', $request);
+
+        return new Key($response['applicationKeyId'], $response['applicationKey'], $response['keyName'], $response['capabilities'], $response['bucketId'], $response['namePrefix'], $response['expirationTimestamp']);
+    }
+
+    /**
      * Sends a authorized request to b2 API.
      *
      * @param string $method
