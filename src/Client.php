@@ -107,7 +107,7 @@ class Client
             'bucketType' => $options['BucketType'],
         ]);
 
-        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType'], $bucket['options'], $bucket['corsRules']);
+        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType'], $response['options'], $response['corsRules']);
     }
 
     /**
