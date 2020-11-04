@@ -4,19 +4,58 @@
       "bucketId": "4a48fe8875c6214145260818",
       "accountId": "30f20426f0b1",
       "bucketName" : "Kitten Videos",
-      "bucketType": "allPrivate"
+      "bucketType": "allPrivate",
+
+      "bucketInfo": [],
+      "corsRules": [],
+      "defaultFileLockConfiguration": {
+        "mode": null,
+        "period": null,
+        "status": "disabled"
+      },
+      "lifecycleRules": [],
+      "options": [
+        "s3"
+      ],
+      "revision": 2
     },
     {
       "bucketId" : "5b232e8875c6214145260818",
       "accountId": "30f20426f0b1",
       "bucketName": "Puppy Videos",
-      "bucketType": "allPublic"
+      "bucketType": "allPublic",
+
+      "bucketInfo": [],
+      "corsRules": [],
+      "defaultFileLockConfiguration": {
+        "mode": null,
+        "period": null,
+        "status": "disabled"
+      },
+      "lifecycleRules": [],
+      "options": [
+        "s3"
+      ],
+      "revision": 2
     },
     {
       "bucketId": "87ba238875c6214145260818",
       "accountId": "30f20426f0b1",
       "bucketName": "Vacation Pictures",
-      "bucketType" : "allPrivate"
+      "bucketType" : "allPrivate",
+
+      "bucketInfo": [],
+      "corsRules": [],
+      "defaultFileLockConfiguration": {
+        "mode": null,
+        "period": null,
+        "status": "disabled"
+      },
+      "lifecycleRules": [],
+      "options": [
+        "s3"
+      ],
+      "revision": 2
     }
   ]
 }
