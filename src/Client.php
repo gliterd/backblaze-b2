@@ -700,7 +700,7 @@ class Client
 
         $response = $this->sendAuthorizedRequest('POST', 'b2_create_key', $request);
 
-        return new Key($response['applicationKeyId'], $response['applicationKey'], $response['keyName'], $response['capabilities'], $response['bucketId'], $response['namePrefix'], $response['expirationTimestamp']);
+        return new Key($response['applicationKeyId'], $response['keyName'], $response['applicationKey'], $response['capabilities'], $response['bucketId'], $response['namePrefix'], $response['expirationTimestamp']);
     }
 
     /**
