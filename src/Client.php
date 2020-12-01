@@ -676,7 +676,7 @@ class Client
      * @throws GuzzleException     If the request fails.
      * @throws B2Exception         If the B2 server replies with an error.
      *
-     * @return Bucket
+     * @return Key
      */
     public function createKey(array $options)
     {
