@@ -34,8 +34,8 @@ class Key
     public function __construct($id, $name, $secret, $capabilities, $bucketId, $namePrefix, $expirationTimestamp)
     {
         $this->id = $id;
-        $this->secret = $secret;
         $this->name = $name;
+        $this->secret = $secret;
         $this->capabilities = $capabilities;
         $this->bucketId = $bucketId;
         $this->namePrefix = $namePrefix;
