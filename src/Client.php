@@ -270,6 +270,65 @@ class Client
     }
 
     /**
+     * Copy a file.
+     *
+     * $options:
+     * required BucketName or BucketId the source bucket
+     * required FileName the file to copy
+     * required SaveAs the path and file name to save to
+     * optional DestinationBucketId or DestinationBucketName, the destination bucket
+     *
+     * @param array $options
+     *
+     * @throws B2Exception
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     *
+     * @return File
+     */
+    public function copy(array $options)
+    {
+        $options['FileName'] = ltrim($options['FileName'], '/');
+        $options['SaveAs'] = ltrim($options['SaveAs'], '/');
+
+        if (!isset($options['DestinationBucketId']) && isset($options['DestinationBucketName'])) {
+            $options['DestinationBucketId'] = $this->getBucketIdFromName($options['DestinationBucketName']);
+        }
+
+        if (!isset($options['BucketId']) && isset($options['BucketName'])) {
+            $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
+        }
+
+        $sourceFiles = $this->listFiles($options['BucketId'], $options['FileName']);
+        $sourceFileId = !empty($sourceFiles) ? $sourceFiles[0]->getId() : false;
+        if (!$sourceFileId) {
+            throw new InvalidArgumentException('Source file not found in B2');
+        }
+
+        $json = [
+            'sourceFileId' => $sourceFileId,
+            'fileName'     => $options['SaveAs'],
+        ];
+        if (isset($options['DestinationBucketId'])) {
+            $json['DestinationBucketId'] = $options['DestinationBucketId'];
+        }
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_copy_file', $json);
+
+        return new File(
+            $response['fileId'],
+            $response['fileName'],
+            $response['contentSha1'],
+            $response['contentLength'],
+            $response['contentType'],
+            $response['fileInfo'],
+            $response['bucketId'],
+            $response['action'],
+            $response['uploadTimestamp'],
+        );
+    }
+
+    /**
      * Retrieve a collection of File objects representing the files stored inside a bucket.
      *
      * @param array $options
