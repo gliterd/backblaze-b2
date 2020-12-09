@@ -314,6 +314,48 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(Stream::class, $uploadRequest->getBody());
     }
 
+    public function testDownloadUrl()
+    {
+        $authorizeAccountString = file_get_contents(dirname(__FILE__).'/responses/authorize_account.json');
+        $authorizeAccount = json_decode($authorizeAccountString);
+        $expectedFileContents = 'foo';
+        $uriResponses = [
+            'https://api.backblazeb2.com/b2api/v1//b2_authorize_account'      => $authorizeAccountString,
+            $authorizeAccount->downloadUrl.'/b2api/v1/b2_download_file_by_id' => $expectedFileContents,
+        ];
+
+        $clientMock = $this->getMockBuilder(\BackblazeB2\Http\Client::class)->getMock();
+        $mockGuzzleRequest = function ($method, $uri = null, array $options = [], $asJson = true) use ($uriResponses) {
+            if (isset($options['headers']) && array_key_exists('Authorization', $options['headers'])) {
+                //If header is present, it must not be empty
+                $this->assertNotEmpty($options['headers']['Authorization'], sprintf('No authorization for uri %s', $uri));
+            }
+
+            if (isset($uriResponses[$uri])) {
+                $response = new \GuzzleHttp\Psr7\Response(200, [], $uriResponses[$uri]);
+            } else {
+                $response = new \GuzzleHttp\Psr7\Response(404, [], null);
+            }
+
+            if ($asJson) {
+                return json_decode($response->getBody(), true);
+            }
+
+            return $response->getBody()->getContents();
+        };
+
+        $clientMock->expects($this->any())
+            ->method('guzzleRequest')
+            ->will($this->returnCallback($mockGuzzleRequest));
+
+        $client = new Client('testId', 'testKey', ['client' => $clientMock]);
+        $actualFileContents = $client->download([
+            'FileId' => 'fileId',
+        ]);
+
+        $this->assertSame($expectedFileContents, $actualFileContents);
+    }
+
     public function testDownloadByIdWithoutSavePath()
     {
         $guzzle = $this->buildGuzzleFromResponses([
