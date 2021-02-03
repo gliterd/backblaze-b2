@@ -244,6 +244,12 @@ class Client
      */
     public function download(array $options)
     {
+        if (!isset($options['FileId']) && !isset($options['BucketName']) && isset($options['BucketId'])) {
+            $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
+        }
+
+        $this->authorizeAccount();
+
         $requestUrl = null;
         $customHeaders = $options['Headers'] ?? [];
         $requestOptions = [
@@ -257,14 +263,8 @@ class Client
             $requestOptions['query'] = ['fileId' => $options['FileId']];
             $requestUrl = $this->downloadUrl.'/b2api/v1/b2_download_file_by_id';
         } else {
-            if (!isset($options['BucketName']) && isset($options['BucketId'])) {
-                $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
-            }
-
             $requestUrl = sprintf('%s/file/%s/%s', $this->downloadUrl, $options['BucketName'], $options['FileName']);
         }
-
-        $this->authorizeAccount();
 
         $response = $this->client->guzzleRequest('GET', $requestUrl, $requestOptions, false);
 
