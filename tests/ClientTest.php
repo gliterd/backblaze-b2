@@ -489,6 +489,26 @@ class ClientTest extends TestCase
         ]);
     }
 
+    public function testCopyFile()
+    {
+        $guzzle = $this->buildGuzzleFromResponses([
+            $this->buildResponseFromStub(200, [], 'authorize_account.json'),
+            $this->buildResponseFromStub(200, [], 'list_files_page1.json'),
+            $this->buildResponseFromStub(200, [], 'copy_file.json'),
+        ]);
+
+        $client = new Client('testId', 'testKey', ['client' => $guzzle]);
+
+        $actual = $client->copy([
+            'BucketId' => 'sourceBucketId',
+            'FileName' => 'sourceFileName',
+            'SaveAs'   => 'destinationFileName',
+        ]);
+
+        $this->assertInstanceOf('BackblazeB2\File', $actual);
+        $this->assertEquals('4_z4c2b953461da9c825f260e1b_f1114dbf5bg9707e8_d20160206_m012226_c001_v1111017_t0010', $actual->getId());
+    }
+
     public function testDeleteFile()
     {
         $guzzle = $this->buildGuzzleFromResponses([

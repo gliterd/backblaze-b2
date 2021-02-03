@@ -85,6 +85,18 @@ $fileContent = $client->download([
 ]);
 ```
 
+#### File Copy
+``` php
+$copyOfFile = $client->copy([
+    'BucketName' => $bucketName,
+    'FileName'   => $path,
+    'SaveAs'     => $newPath,
+
+    // Can also supply BucketId instead of BucketName
+    // Optional are DestinationBucketName or DestinationBucketId
+]);
+```
+
 #### File Delete
 ``` php
 $fileDelete = $client->deleteFile([
