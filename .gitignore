@@ -5,3 +5,4 @@ vendor
 coverage
 coverage.xml
 .idea/
+.phpunit.result.cache

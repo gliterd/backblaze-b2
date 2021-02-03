@@ -11,8 +11,8 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class Client
 {
-    private const B2_API_BASE_URL = 'https://api.backblazeb2.com';
-    private const B2_API_V1 = '/b2api/v1/';
+    const B2_API_BASE_URL = 'https://api.backblazeb2.com';
+    const B2_API_V1 = '/b2api/v1/';
     protected $accountId;
     protected $applicationKey;
     protected $authToken;
@@ -361,7 +361,18 @@ class Client
      */
     public function getFile(array $options)
     {
-        if (!isset($options['FileId']) && isset($options['BucketName']) && isset($options['FileName'])) {
+        if (!isset($options['FileId']) && isset($options['BucketId']) && isset($options['FileName'])) {
+            $files = $this->listFiles([
+                'BucketId' => $options['BucketId'],
+                'FileName' => $options['FileName'],
+            ]);
+
+            if (empty($files)) {
+                throw new NotFoundException();
+            }
+
+            $options['FileId'] = $files[0]->getId();
+        } elseif (!isset($options['FileId']) && isset($options['BucketName']) && isset($options['FileName'])) {
             $options['FileId'] = $this->getFileIdFromBucketAndFileName($options['BucketName'], $options['FileName']);
 
             if (!$options['FileId']) {
