@@ -212,15 +212,16 @@ class Client
             $options['FileContentType'] = 'b2/x-auto';
         }
 
+        $customHeaders = $options['Headers'] ?? [];
         $response = $this->client->guzzleRequest('POST', $uploadEndpoint, [
-            'headers' => [
+            'headers' => array_merge([
                 'Authorization'                      => $uploadAuthToken,
                 'Content-Type'                       => $options['FileContentType'],
                 'Content-Length'                     => $size,
                 'X-Bz-File-Name'                     => $options['FileName'],
                 'X-Bz-Content-Sha1'                  => $hash,
                 'X-Bz-Info-src_last_modified_millis' => $options['FileLastModified'],
-            ],
+            ], $customHeaders),
             'body' => $options['Body'],
         ]);
 
@@ -244,10 +245,11 @@ class Client
     public function download(array $options)
     {
         $requestUrl = null;
+        $customHeaders = $options['Headers'] ?? [];
         $requestOptions = [
-            'headers' => [
+            'headers' => array_merge([
                 'Authorization' => $this->authToken,
-            ],
+            ], $customHeaders),
             'sink' => isset($options['SaveAs']) ? $options['SaveAs'] : null,
         ];
 
@@ -529,7 +531,7 @@ class Client
         $url = $this->getUploadPartUrl($start['fileId']);
 
         // 3) b2_upload_part for each part of the file
-        $parts = $this->uploadParts($options['FilePath'].$options['FileName'], $url['uploadUrl'], $url['authorizationToken']);
+        $parts = $this->uploadParts($options['FilePath'].$options['FileName'], $url['uploadUrl'], $url['authorizationToken'], $options);
 
         $sha1s = [];
 
@@ -585,10 +587,11 @@ class Client
      * @param $filePath
      * @param $uploadUrl
      * @param $largeFileAuthToken
+     * @param $options
      *
      * @return array
      */
-    protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken)
+    protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken, $options = [])
     {
         $return = [];
 
@@ -614,13 +617,14 @@ class Client
             array_push($sha1_of_parts, sha1($data_part));
             fseek($file_handle, $total_bytes_sent);
 
+            $customHeaders = $options['Headers'] ?? [];
             $response = $this->client->guzzleRequest('POST', $uploadUrl, [
-                'headers' => [
+                'headers' => array_merge([
                     'Authorization'                      => $largeFileAuthToken,
                     'Content-Length'                     => $bytes_sent_for_part,
                     'X-Bz-Part-Number'                   => $part_no,
                     'X-Bz-Content-Sha1'                  => $sha1_of_parts[$part_no - 1],
-                ],
+                ], $customHeaders),
                 'body' => $data_part,
             ]);
 
