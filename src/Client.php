@@ -419,6 +419,38 @@ class Client
     }
 
     /**
+     * Fetches authorization and uri for a file, to allow a third-party system to download public and private files.
+     *
+     * @param array $options
+     *
+     * @throws GuzzleException
+     * @throws NotFoundException
+     * @throws GuzzleException   If the request fails.
+     * @throws B2Exception       If the B2 server replies with an error.
+     *
+     * @return array
+     */
+    public function getFileUri(array $options)
+    {
+        if (!isset($options['FileId']) && !isset($options['BucketName']) && isset($options['BucketId'])) {
+            $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
+        }
+
+        $this->authorizeAccount();
+
+        if (isset($options['FileId'])) {
+            $requestUri = $this->downloadUrl.'/b2api/v1/b2_download_file_by_id?fileId='.urlencode($options['FileId']);
+        } else {
+            $requestUri = sprintf('%s/file/%s/%s', $this->downloadUrl, $options['BucketName'], $options['FileName']);
+        }
+
+        return [
+            'Authorization' => $this->authToken,
+            'Uri'           => $requestUri,
+        ];
+    }
+
+    /**
      * Authorize the B2 account in order to get an auth token and API/download URLs.
      */
     protected function authorizeAccount()
