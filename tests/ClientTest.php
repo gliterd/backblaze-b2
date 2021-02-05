@@ -314,6 +314,48 @@ class ClientTest extends TestCase
         $this->assertInstanceOf(Stream::class, $uploadRequest->getBody());
     }
 
+    public function testDownloadUrl()
+    {
+        $authorizeAccountString = file_get_contents(dirname(__FILE__).'/responses/authorize_account.json');
+        $authorizeAccount = json_decode($authorizeAccountString);
+        $expectedFileContents = 'foo';
+        $uriResponses = [
+            'https://api.backblazeb2.com/b2api/v1//b2_authorize_account'      => $authorizeAccountString,
+            $authorizeAccount->downloadUrl.'/b2api/v1/b2_download_file_by_id' => $expectedFileContents,
+        ];
+
+        $clientMock = $this->getMockBuilder(\BackblazeB2\Http\Client::class)->getMock();
+        $mockGuzzleRequest = function ($method, $uri = null, array $options = [], $asJson = true) use ($uriResponses) {
+            if (isset($options['headers']) && array_key_exists('Authorization', $options['headers'])) {
+                //If header is present, it must not be empty
+                $this->assertNotEmpty($options['headers']['Authorization'], sprintf('No authorization for uri %s', $uri));
+            }
+
+            if (isset($uriResponses[$uri])) {
+                $response = new \GuzzleHttp\Psr7\Response(200, [], $uriResponses[$uri]);
+            } else {
+                $response = new \GuzzleHttp\Psr7\Response(404, [], null);
+            }
+
+            if ($asJson) {
+                return json_decode($response->getBody(), true);
+            }
+
+            return $response->getBody()->getContents();
+        };
+
+        $clientMock->expects($this->any())
+            ->method('guzzleRequest')
+            ->will($this->returnCallback($mockGuzzleRequest));
+
+        $client = new Client('testId', 'testKey', ['client' => $clientMock]);
+        $actualFileContents = $client->download([
+            'FileId' => 'fileId',
+        ]);
+
+        $this->assertSame($expectedFileContents, $actualFileContents);
+    }
+
     public function testDownloadByIdWithoutSavePath()
     {
         $guzzle = $this->buildGuzzleFromResponses([
@@ -487,6 +529,26 @@ class ClientTest extends TestCase
         $client->getFile([
             'FileId' => 'fileId',
         ]);
+    }
+
+    public function testCopyFile()
+    {
+        $guzzle = $this->buildGuzzleFromResponses([
+            $this->buildResponseFromStub(200, [], 'authorize_account.json'),
+            $this->buildResponseFromStub(200, [], 'list_files_page1.json'),
+            $this->buildResponseFromStub(200, [], 'copy_file.json'),
+        ]);
+
+        $client = new Client('testId', 'testKey', ['client' => $guzzle]);
+
+        $actual = $client->copy([
+            'BucketId' => 'sourceBucketId',
+            'FileName' => 'sourceFileName',
+            'SaveAs'   => 'destinationFileName',
+        ]);
+
+        $this->assertInstanceOf('BackblazeB2\File', $actual);
+        $this->assertEquals('4_z4c2b953461da9c825f260e1b_f1114dbf5bg9707e8_d20160206_m012226_c001_v1111017_t0010', $actual->getId());
     }
 
     public function testDeleteFile()

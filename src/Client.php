@@ -11,8 +11,8 @@ use GuzzleHttp\Exception\GuzzleException;
 
 class Client
 {
-    private const B2_API_BASE_URL = 'https://api.backblazeb2.com';
-    private const B2_API_V1 = '/b2api/v1/';
+    const B2_API_BASE_URL = 'https://api.backblazeb2.com';
+    const B2_API_V1 = '/b2api/v1/';
     protected $accountId;
     protected $applicationKey;
     protected $authToken;
@@ -212,15 +212,16 @@ class Client
             $options['FileContentType'] = 'b2/x-auto';
         }
 
+        $customHeaders = $options['Headers'] ?? [];
         $response = $this->client->guzzleRequest('POST', $uploadEndpoint, [
-            'headers' => [
+            'headers' => array_merge([
                 'Authorization'                      => $uploadAuthToken,
                 'Content-Type'                       => $options['FileContentType'],
                 'Content-Length'                     => $size,
                 'X-Bz-File-Name'                     => $options['FileName'],
                 'X-Bz-Content-Sha1'                  => $hash,
                 'X-Bz-Info-src_last_modified_millis' => $options['FileLastModified'],
-            ],
+            ], $customHeaders),
             'body' => $options['Body'],
         ]);
 
@@ -243,11 +244,18 @@ class Client
      */
     public function download(array $options)
     {
+        if (!isset($options['FileId']) && !isset($options['BucketName']) && isset($options['BucketId'])) {
+            $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
+        }
+
+        $this->authorizeAccount();
+
         $requestUrl = null;
+        $customHeaders = $options['Headers'] ?? [];
         $requestOptions = [
-            'headers' => [
+            'headers' => array_merge([
                 'Authorization' => $this->authToken,
-            ],
+            ], $customHeaders),
             'sink' => isset($options['SaveAs']) ? $options['SaveAs'] : null,
         ];
 
@@ -255,18 +263,71 @@ class Client
             $requestOptions['query'] = ['fileId' => $options['FileId']];
             $requestUrl = $this->downloadUrl.'/b2api/v1/b2_download_file_by_id';
         } else {
-            if (!isset($options['BucketName']) && isset($options['BucketId'])) {
-                $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
-            }
-
             $requestUrl = sprintf('%s/file/%s/%s', $this->downloadUrl, $options['BucketName'], $options['FileName']);
         }
-
-        $this->authorizeAccount();
 
         $response = $this->client->guzzleRequest('GET', $requestUrl, $requestOptions, false);
 
         return isset($options['SaveAs']) ? true : $response;
+    }
+
+    /**
+     * Copy a file.
+     *
+     * $options:
+     * required BucketName or BucketId the source bucket
+     * required FileName the file to copy
+     * required SaveAs the path and file name to save to
+     * optional DestinationBucketId or DestinationBucketName, the destination bucket
+     *
+     * @param array $options
+     *
+     * @throws B2Exception
+     * @throws GuzzleException
+     * @throws InvalidArgumentException
+     *
+     * @return File
+     */
+    public function copy(array $options)
+    {
+        $options['FileName'] = ltrim($options['FileName'], '/');
+        $options['SaveAs'] = ltrim($options['SaveAs'], '/');
+
+        if (!isset($options['DestinationBucketId']) && isset($options['DestinationBucketName'])) {
+            $options['DestinationBucketId'] = $this->getBucketIdFromName($options['DestinationBucketName']);
+        }
+
+        if (!isset($options['BucketId']) && isset($options['BucketName'])) {
+            $options['BucketId'] = $this->getBucketIdFromName($options['BucketName']);
+        }
+
+        $sourceFiles = $this->listFiles($options['BucketId'], $options['FileName']);
+        $sourceFileId = !empty($sourceFiles) ? $sourceFiles[0]->getId() : false;
+        if (!$sourceFileId) {
+            throw new InvalidArgumentException('Source file not found in B2');
+        }
+
+        $json = [
+            'sourceFileId' => $sourceFileId,
+            'fileName'     => $options['SaveAs'],
+        ];
+        if (isset($options['DestinationBucketId'])) {
+            $json['DestinationBucketId'] = $options['DestinationBucketId'];
+        }
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_copy_file', $json);
+
+        return new File(
+            $response['fileId'],
+            $response['fileName'],
+            $response['contentSha1'],
+            $response['contentLength'],
+            $response['contentType'],
+            $response['fileInfo'],
+            $response['bucketId'],
+            $response['action'],
+            $response['uploadTimestamp'],
+        );
     }
 
     /**
@@ -359,7 +420,18 @@ class Client
      */
     public function getFile(array $options)
     {
-        if (!isset($options['FileId']) && isset($options['BucketName']) && isset($options['FileName'])) {
+        if (!isset($options['FileId']) && isset($options['BucketId']) && isset($options['FileName'])) {
+            $files = $this->listFiles([
+                'BucketId' => $options['BucketId'],
+                'FileName' => $options['FileName'],
+            ]);
+
+            if (empty($files)) {
+                throw new NotFoundException();
+            }
+
+            $options['FileId'] = $files[0]->getId();
+        } elseif (!isset($options['FileId']) && isset($options['BucketName']) && isset($options['FileName'])) {
             $options['FileId'] = $this->getFileIdFromBucketAndFileName($options['BucketName'], $options['FileName']);
 
             if (!$options['FileId']) {
@@ -416,6 +488,38 @@ class Client
         ]);
 
         return true;
+    }
+
+    /**
+     * Fetches authorization and uri for a file, to allow a third-party system to download public and private files.
+     *
+     * @param array $options
+     *
+     * @throws GuzzleException
+     * @throws NotFoundException
+     * @throws GuzzleException   If the request fails.
+     * @throws B2Exception       If the B2 server replies with an error.
+     *
+     * @return array
+     */
+    public function getFileUri(array $options)
+    {
+        if (!isset($options['FileId']) && !isset($options['BucketName']) && isset($options['BucketId'])) {
+            $options['BucketName'] = $this->getBucketNameFromId($options['BucketId']);
+        }
+
+        $this->authorizeAccount();
+
+        if (isset($options['FileId'])) {
+            $requestUri = $this->downloadUrl.'/b2api/v1/b2_download_file_by_id?fileId='.urlencode($options['FileId']);
+        } else {
+            $requestUri = sprintf('%s/file/%s/%s', $this->downloadUrl, $options['BucketName'], $options['FileName']);
+        }
+
+        return [
+            'Authorization' => $this->authToken,
+            'Uri'           => $requestUri,
+        ];
     }
 
     /**
@@ -529,7 +633,7 @@ class Client
         $url = $this->getUploadPartUrl($start['fileId']);
 
         // 3) b2_upload_part for each part of the file
-        $parts = $this->uploadParts($options['FilePath'].$options['FileName'], $url['uploadUrl'], $url['authorizationToken']);
+        $parts = $this->uploadParts($options['FilePath'].$options['FileName'], $url['uploadUrl'], $url['authorizationToken'], $options);
 
         $sha1s = [];
 
@@ -585,10 +689,11 @@ class Client
      * @param $filePath
      * @param $uploadUrl
      * @param $largeFileAuthToken
+     * @param $options
      *
      * @return array
      */
-    protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken)
+    protected function uploadParts($filePath, $uploadUrl, $largeFileAuthToken, $options = [])
     {
         $return = [];
 
@@ -614,13 +719,14 @@ class Client
             array_push($sha1_of_parts, sha1($data_part));
             fseek($file_handle, $total_bytes_sent);
 
+            $customHeaders = $options['Headers'] ?? [];
             $response = $this->client->guzzleRequest('POST', $uploadUrl, [
-                'headers' => [
+                'headers' => array_merge([
                     'Authorization'                      => $largeFileAuthToken,
                     'Content-Length'                     => $bytes_sent_for_part,
                     'X-Bz-Part-Number'                   => $part_no,
                     'X-Bz-Content-Sha1'                  => $sha1_of_parts[$part_no - 1],
-                ],
+                ], $customHeaders),
                 'body' => $data_part,
             ]);
 
