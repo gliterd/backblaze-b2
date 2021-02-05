@@ -698,6 +698,7 @@ class Client
         foreach ($response['keys'] as $key) {
             $keys[] = new Key($key['applicationKeyId'], $key['keyName'], null, $key['capabilities'], $key['bucketId'], $key['namePrefix'], $key['expirationTimestamp']);
         }
+
         return $keys;
     }
 
