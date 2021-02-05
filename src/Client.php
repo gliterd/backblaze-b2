@@ -303,7 +303,7 @@ class Client
 
         $sourceFiles = $this->listFiles([
             'BucketId' => $options['BucketId'],
-            'FileName' => $options['FileName']
+            'FileName' => $options['FileName'],
         ]);
         $sourceFileId = !empty($sourceFiles) ? $sourceFiles[0]->getId() : false;
         if (!$sourceFileId) {
