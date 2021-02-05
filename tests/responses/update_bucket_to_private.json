@@ -2,5 +2,18 @@
   "accountId": "accountId",
   "bucketId": "bucketId",
   "bucketName": "test-bucket",
-  "bucketType": "allPrivate"
+  "bucketType": "allPrivate",
+
+  "bucketInfo": [],
+  "corsRules": [],
+  "defaultFileLockConfiguration": {
+    "mode": null,
+    "period": null,
+    "status": "disabled"
+  },
+  "lifecycleRules": [],
+  "options": [
+    "s3"
+  ],
+  "revision": 2
 }
