@@ -75,7 +75,7 @@ class Client
             'bucketType' => $options['BucketType'],
         ]);
 
-        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
+        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType'], $response['options'], $response['corsRules']);
     }
 
     /**
@@ -107,7 +107,7 @@ class Client
             'bucketType' => $options['BucketType'],
         ]);
 
-        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType']);
+        return new Bucket($response['bucketId'], $response['bucketName'], $response['bucketType'], $response['options'], $response['corsRules']);
     }
 
     /**
@@ -127,7 +127,7 @@ class Client
         ]);
 
         foreach ($response['buckets'] as $bucket) {
-            $buckets[] = new Bucket($bucket['bucketId'], $bucket['bucketName'], $bucket['bucketType']);
+            $buckets[] = new Bucket($bucket['bucketId'], $bucket['bucketName'], $bucket['bucketType'], $bucket['options'], $bucket['corsRules']);
         }
 
         return $buckets;
@@ -777,6 +777,99 @@ class Client
             $response['action'],
             $response['uploadTimestamp']
         );
+    }
+
+    /**
+     * List key pairs.
+     *
+     * @param array $options
+     *
+     * @throws ValidationException
+     * @throws GuzzleException     If the request fails.
+     * @throws B2Exception         If the B2 server replies with an error.
+     *
+     * @return Key
+     */
+    public function listKeys(array $options = [])
+    {
+        $request = [
+            'accountId'    => $this->accountId,
+        ];
+
+        if (array_key_exists('MaxKeyCount', $options)) {
+            $request['maxKeyCount'] = $options['MaxKeyCount'];
+        }
+
+        if (array_key_exists('StartApplicationKeyId', $options)) {
+            $request['startApplicationKeyId'] = $options['StartApplicationKeyId'];
+        }
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_list_keys', $request);
+
+        $keys = [];
+        foreach ($response['keys'] as $key) {
+            $keys[] = new Key($key['applicationKeyId'], $key['keyName'], null, $key['capabilities'], $key['bucketId'], $key['namePrefix'], $key['expirationTimestamp']);
+        }
+
+        return $keys;
+    }
+
+    /**
+     * Create a key pair for the given bucket and permissions.
+     *
+     * @param array $options
+     *
+     * @throws ValidationException
+     * @throws GuzzleException     If the request fails.
+     * @throws B2Exception         If the B2 server replies with an error.
+     *
+     * @return Key
+     */
+    public function createKey(array $options)
+    {
+        $request = [
+            'accountId'    => $this->accountId,
+            'capabilities' => $options['Capabilities'],
+            'keyName'      => $options['KeyName'],
+        ];
+
+        if (array_key_exists('BucketId', $options)) {
+            $request['bucketId'] = $options['BucketId'];
+        }
+
+        if (array_key_exists('NamePrefix', $options)) {
+            $request['namePrefix'] = $options['NamePrefix'];
+        }
+
+        if (array_key_exists('ValidDurationInSeconds', $options)) {
+            $request['validDurationInSeconds'] = $options['ValidDurationInSeconds'];
+        }
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_create_key', $request);
+
+        return new Key($response['applicationKeyId'], $response['keyName'], $response['applicationKey'], $response['capabilities'], $response['bucketId'], $response['namePrefix'], $response['expirationTimestamp']);
+    }
+
+    /**
+     * Delete a key pair.
+     *
+     * @param array $options
+     *
+     * @throws ValidationException
+     * @throws GuzzleException     If the request fails.
+     * @throws B2Exception         If the B2 server replies with an error.
+     *
+     * @return Key
+     */
+    public function deleteKey(array $options)
+    {
+        $request = [
+            'applicationKeyId' => $options['ApplicationKeyId'],
+        ];
+
+        $response = $this->sendAuthorizedRequest('POST', 'b2_delete_key', $request);
+
+        return new Key($response['applicationKeyId'], $response['keyName'], null, $response['capabilities'], $response['bucketId'], $response['namePrefix'], $response['expirationTimestamp']);
     }
 
     /**
