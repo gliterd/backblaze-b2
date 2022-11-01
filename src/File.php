@@ -43,7 +43,7 @@ class File implements \JsonSerializable
     /**
      * @return array
      * */
-    public function jsonSerialize(): mixed
+    public function jsonSerialize()
     {
         return [
             'id'              => $this->getId(),
