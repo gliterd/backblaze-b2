@@ -44,7 +44,7 @@ class Client
         // set reauthorize time to force an authentication to take place
         $this->reAuthTime = Carbon::now('UTC')->subSeconds($this->authTimeoutSeconds * 2);
 
-        $this->client = new HttpClient(['exceptions' => false]);
+        $this->client = new HttpClient(['exceptions' => false, 'verify' => ($options['verify_ssl'] ?? true)]);
         if (isset($options['client'])) {
             $this->client = $options['client'];
         }
